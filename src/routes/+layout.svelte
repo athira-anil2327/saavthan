@@ -1,13 +1,11 @@
 <script lang="ts">
-	import './layout.css';
-	import favicon from '#lib/assets/favicon.svg';
-	import type { LayoutProps } from './$types';
+	import '../app.css';
+	import Navbar from '#lib/components/Navbar.svelte';
 
-	let { children }: LayoutProps = $props();
+	let { children } = $props();
 </script>
 
-<svelte:head>
-	<link rel="icon" href={favicon} />
-</svelte:head>
-
-{@render children()}
+<div class="min-h-screen bg-white text-[#202124] flex flex-col font-sans antialiased selection:bg-[#FFF1F1] selection:text-[#FF7675]">
+	<Navbar />
+	{@render children()}
+</div>
