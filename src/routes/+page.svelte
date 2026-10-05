@@ -13,12 +13,6 @@
 		name="description"
 		content="A zero-trace workspace for secure document access on shared computers. Protect your client. Leave no trace."
 	/>
-	<link rel="preconnect" href="https://fonts.googleapis.com" />
-	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
-	<link
-		href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700&display=swap"
-		rel="stylesheet"
-	/>
 </svelte:head>
 
 <div class="vault-page">
@@ -130,7 +124,7 @@
 
 				<!-- Process Arrow Connector -->
 				<div class="process-arrow" aria-hidden="true">
-					<ArrowRight size={24} />
+					<ArrowRight size={22} />
 				</div>
 
 				<!-- Step 02: WORK -->
@@ -146,7 +140,7 @@
 
 				<!-- Process Arrow Connector -->
 				<div class="process-arrow" aria-hidden="true">
-					<ArrowRight size={24} />
+					<ArrowRight size={22} />
 				</div>
 
 				<!-- Step 03: WIPE -->
@@ -172,8 +166,6 @@
 </div>
 
 <style>
-	@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700&display=swap');
-
 	/* Page Base Layout */
 	.vault-page {
 		min-height: 100vh;
@@ -191,7 +183,7 @@
 		position: sticky;
 		top: 0;
 		width: 100%;
-		height: 72px;
+		height: 68px;
 		background-color: #ffffff;
 		border-bottom: 1px solid #e5e7eb;
 		display: flex;
@@ -209,10 +201,9 @@
 	}
 
 	.brand-text {
-		font-family: 'Orbitron', sans-serif;
-		font-size: 20px;
+		font-size: 19px;
 		font-weight: 700;
-		letter-spacing: 0.05em;
+		letter-spacing: 0.04em;
 		color: #202124;
 		transition: color 0.15s ease;
 	}
@@ -224,7 +215,7 @@
 	.desktop-nav {
 		display: flex;
 		align-items: center;
-		gap: 32px;
+		gap: 28px;
 	}
 
 	.nav-item {
@@ -309,8 +300,8 @@
 
 	/* Hero Section */
 	.hero-section {
-		padding-top: 110px;
-		padding-bottom: 84px;
+		padding-top: 96px;
+		padding-bottom: 72px;
 		text-align: center;
 		display: flex;
 		flex-direction: column;
@@ -319,34 +310,33 @@
 	}
 
 	.hero-headline {
-		font-family: 'Orbitron', sans-serif;
-		font-size: 72px;
+		font-size: 54px;
 		font-weight: 700;
-		line-height: 1.05;
-		letter-spacing: -0.01em;
+		line-height: 1.15;
+		letter-spacing: -0.02em;
 		color: #202124;
 		text-transform: uppercase;
-		margin: 0 0 18px 0;
-		max-width: 960px;
+		margin: 0 0 16px 0;
+		max-width: 840px;
 	}
 
 	.hero-tagline {
-		font-family: 'Orbitron', sans-serif;
-		font-size: 26px;
+		font-size: 22px;
 		font-weight: 600;
 		line-height: 1.35;
+		letter-spacing: -0.01em;
 		color: #00b894;
-		margin: 0 0 20px 0;
-		max-width: 820px;
+		margin: 0 0 18px 0;
+		max-width: 700px;
 	}
 
 	.hero-description {
-		font-size: 19px;
+		font-size: 17px;
 		font-weight: 400;
-		line-height: 1.55;
+		line-height: 1.6;
 		color: #6b7280;
-		max-width: 650px;
-		margin: 0 0 36px 0;
+		max-width: 600px;
+		margin: 0 0 32px 0;
 	}
 
 	.hero-cta-wrapper {
@@ -355,8 +345,8 @@
 	}
 
 	:global(.vault-primary-button) {
-		height: 48px !important;
-		padding: 0 36px !important;
+		height: 46px !important;
+		padding: 0 32px !important;
 		background-color: #00b894 !important;
 		color: #ffffff !important;
 		font-size: 15px !important;
@@ -390,7 +380,7 @@
 
 	/* Process Section */
 	.process-section {
-		padding: 88px 0 96px 0;
+		padding: 72px 0 84px 0;
 		text-align: center;
 		display: flex;
 		flex-direction: column;
@@ -398,22 +388,21 @@
 	}
 
 	.process-header {
-		margin-bottom: 52px;
-		max-width: 780px;
+		margin-bottom: 48px;
+		max-width: 680px;
 	}
 
 	.process-heading {
-		font-family: 'Orbitron', sans-serif;
-		font-size: 32px;
+		font-size: 28px;
 		font-weight: 700;
 		letter-spacing: -0.01em;
 		color: #202124;
 		text-transform: uppercase;
-		margin: 0 0 14px 0;
+		margin: 0 0 10px 0;
 	}
 
 	.process-subheading {
-		font-size: 18px;
+		font-size: 16px;
 		font-weight: 400;
 		line-height: 1.5;
 		color: #6b7280;
@@ -427,8 +416,8 @@
 		align-items: center;
 		gap: 16px;
 		width: 100%;
-		max-width: 1100px;
-		margin-bottom: 56px;
+		max-width: 1080px;
+		margin-bottom: 52px;
 	}
 
 	:global(.process-card) {
@@ -436,7 +425,7 @@
 		background-color: #ffffff !important;
 		border: 1px solid #e5e7eb !important;
 		border-radius: 12px !important;
-		padding: 32px 28px !important;
+		padding: 30px 26px !important;
 		box-shadow: none !important;
 		text-align: left !important;
 		display: flex !important;
@@ -451,30 +440,29 @@
 	}
 
 	.step-header {
-		margin-bottom: 24px;
+		margin-bottom: 20px;
 	}
 
 	.step-number {
-		font-size: 14px;
+		font-size: 13px;
 		font-weight: 600;
 		color: #9ca3af;
-		letter-spacing: 0.05em;
+		letter-spacing: 0.04em;
 	}
 
 	.step-title {
-		font-family: 'Orbitron', sans-serif;
-		font-size: 18px;
+		font-size: 16px;
 		font-weight: 700;
 		letter-spacing: 0.04em;
 		color: #00b894;
 		text-transform: uppercase;
-		margin: 0 0 12px 0;
+		margin: 0 0 8px 0;
 	}
 
 	.step-description {
 		font-size: 14px;
 		font-weight: 400;
-		line-height: 1.6;
+		line-height: 1.55;
 		color: #6b7280;
 		margin: 0;
 	}
@@ -484,7 +472,7 @@
 		align-items: center;
 		justify-content: center;
 		color: #00b894;
-		padding: 0 8px;
+		padding: 0 6px;
 		flex-shrink: 0;
 	}
 
@@ -494,10 +482,9 @@
 	}
 
 	.conclusion-text {
-		font-family: 'Orbitron', sans-serif;
-		font-size: 34px;
+		font-size: 24px;
 		font-weight: 700;
-		letter-spacing: -0.01em;
+		letter-spacing: 0.02em;
 		color: #202124;
 		text-transform: uppercase;
 		margin: 0;
@@ -510,19 +497,19 @@
 	/* Responsive Breakpoints */
 	@media (max-width: 960px) {
 		.hero-headline {
-			font-size: 48px;
+			font-size: 42px;
 		}
 
 		.hero-tagline {
-			font-size: 22px;
+			font-size: 19px;
 		}
 
 		.hero-description {
-			font-size: 17px;
+			font-size: 15px;
 		}
 
 		.process-heading {
-			font-size: 26px;
+			font-size: 24px;
 		}
 
 		.process-flow {
@@ -534,7 +521,7 @@
 
 		:global(.process-card) {
 			width: 100% !important;
-			max-width: 500px !important;
+			max-width: 480px !important;
 		}
 
 		.process-arrow {
@@ -543,7 +530,7 @@
 		}
 
 		.conclusion-text {
-			font-size: 26px;
+			font-size: 20px;
 		}
 	}
 
@@ -554,7 +541,7 @@
 		}
 
 		.brand-text {
-			font-size: 18px;
+			font-size: 17px;
 		}
 
 		.desktop-nav {
@@ -574,43 +561,43 @@
 		}
 
 		.hero-section {
-			padding-top: 68px;
-			padding-bottom: 56px;
+			padding-top: 60px;
+			padding-bottom: 48px;
 		}
 
 		.hero-headline {
-			font-size: 34px;
-			margin-bottom: 14px;
+			font-size: 32px;
+			margin-bottom: 12px;
 		}
 
 		.hero-tagline {
-			font-size: 18px;
-			margin-bottom: 16px;
+			font-size: 17px;
+			margin-bottom: 14px;
 		}
 
 		.hero-description {
-			font-size: 15px;
-			margin-bottom: 28px;
+			font-size: 14px;
+			margin-bottom: 24px;
 		}
 
 		.process-section {
-			padding: 56px 0 64px 0;
+			padding: 48px 0 56px 0;
 		}
 
 		.process-header {
-			margin-bottom: 36px;
+			margin-bottom: 32px;
 		}
 
 		.process-heading {
-			font-size: 22px;
+			font-size: 20px;
 		}
 
 		.process-subheading {
-			font-size: 15px;
+			font-size: 14px;
 		}
 
 		.conclusion-text {
-			font-size: 20px;
+			font-size: 18px;
 		}
 	}
 </style>
