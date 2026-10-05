@@ -13,6 +13,12 @@
 		name="description"
 		content="A zero-trace workspace for secure document access on shared computers. Protect your client. Leave no trace."
 	/>
+	<link rel="preconnect" href="https://fonts.googleapis.com" />
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+	<link
+		href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700&display=swap"
+		rel="stylesheet"
+	/>
 </svelte:head>
 
 <div class="vault-page">
@@ -109,7 +115,7 @@
 				</p>
 			</div>
 
-			<!-- Three Sequential Process Blocks with Arrows -->
+			<!-- Three Sequential Process Blocks with Centered Arrows -->
 			<div class="process-flow">
 				<!-- Step 01: ISOLATE -->
 				<Card.Root class="process-card">
@@ -124,7 +130,7 @@
 
 				<!-- Process Arrow Connector -->
 				<div class="process-arrow" aria-hidden="true">
-					<ArrowRight size={22} class="arrow-icon" />
+					<ArrowRight size={24} />
 				</div>
 
 				<!-- Step 02: WORK -->
@@ -134,13 +140,13 @@
 					</div>
 					<h3 class="step-title">WORK</h3>
 					<p class="step-description">
-						Customers can safely access, download and print documents.
+						Customers can safely access, download and print their documents.
 					</p>
 				</Card.Root>
 
 				<!-- Process Arrow Connector -->
 				<div class="process-arrow" aria-hidden="true">
-					<ArrowRight size={22} class="arrow-icon" />
+					<ArrowRight size={24} />
 				</div>
 
 				<!-- Step 03: WIPE -->
@@ -150,7 +156,7 @@
 					</div>
 					<h3 class="step-title">WIPE</h3>
 					<p class="step-description">
-						When the session ends, the environment disappears.
+						When the session ends, the environment disappears with its data.
 					</p>
 				</Card.Root>
 			</div>
@@ -158,7 +164,7 @@
 			<!-- Process Conclusion Statement -->
 			<div class="process-conclusion">
 				<h3 class="conclusion-text">
-					ONE SESSION. ZERO TRACE.
+					ONE SESSION. <span class="accent-text">ZERO TRACE.</span>
 				</h3>
 			</div>
 		</section>
@@ -166,6 +172,8 @@
 </div>
 
 <style>
+	@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700&display=swap');
+
 	/* Page Base Layout */
 	.vault-page {
 		min-height: 100vh;
@@ -183,7 +191,7 @@
 		position: sticky;
 		top: 0;
 		width: 100%;
-		height: 68px;
+		height: 72px;
 		background-color: #ffffff;
 		border-bottom: 1px solid #e5e7eb;
 		display: flex;
@@ -201,21 +209,22 @@
 	}
 
 	.brand-text {
-		font-size: 18px;
+		font-family: 'Orbitron', sans-serif;
+		font-size: 20px;
 		font-weight: 700;
-		letter-spacing: 0.04em;
+		letter-spacing: 0.05em;
 		color: #202124;
 		transition: color 0.15s ease;
 	}
 
 	.brand-link:hover .brand-text {
-		color: #d96f7a;
+		color: #00b894;
 	}
 
 	.desktop-nav {
 		display: flex;
 		align-items: center;
-		gap: 28px;
+		gap: 32px;
 	}
 
 	.nav-item {
@@ -300,8 +309,8 @@
 
 	/* Hero Section */
 	.hero-section {
-		padding-top: 96px;
-		padding-bottom: 72px;
+		padding-top: 110px;
+		padding-bottom: 84px;
 		text-align: center;
 		display: flex;
 		flex-direction: column;
@@ -310,33 +319,34 @@
 	}
 
 	.hero-headline {
-		font-size: 52px;
+		font-family: 'Orbitron', sans-serif;
+		font-size: 72px;
 		font-weight: 700;
-		line-height: 1.15;
-		letter-spacing: -0.02em;
+		line-height: 1.05;
+		letter-spacing: -0.01em;
 		color: #202124;
 		text-transform: uppercase;
-		margin: 0 0 16px 0;
-		max-width: 820px;
+		margin: 0 0 18px 0;
+		max-width: 960px;
 	}
 
 	.hero-tagline {
-		font-size: 22px;
+		font-family: 'Orbitron', sans-serif;
+		font-size: 26px;
 		font-weight: 600;
 		line-height: 1.35;
-		letter-spacing: -0.01em;
-		color: #d96f7a;
-		margin: 0 0 16px 0;
-		max-width: 680px;
+		color: #00b894;
+		margin: 0 0 20px 0;
+		max-width: 820px;
 	}
 
 	.hero-description {
-		font-size: 16px;
+		font-size: 19px;
 		font-weight: 400;
-		line-height: 1.6;
+		line-height: 1.55;
 		color: #6b7280;
-		max-width: 580px;
-		margin: 0 0 32px 0;
+		max-width: 650px;
+		margin: 0 0 36px 0;
 	}
 
 	.hero-cta-wrapper {
@@ -345,11 +355,11 @@
 	}
 
 	:global(.vault-primary-button) {
-		height: 44px !important;
-		padding: 0 32px !important;
-		background-color: #d96f7a !important;
+		height: 48px !important;
+		padding: 0 36px !important;
+		background-color: #00b894 !important;
 		color: #ffffff !important;
-		font-size: 14px !important;
+		font-size: 15px !important;
 		font-weight: 500 !important;
 		border-radius: 8px !important;
 		border: none !important;
@@ -363,7 +373,7 @@
 	}
 
 	:global(.vault-primary-button:hover) {
-		background-color: #c95f6a !important;
+		background-color: #009f80 !important;
 	}
 
 	/* Dividers */
@@ -380,7 +390,7 @@
 
 	/* Process Section */
 	.process-section {
-		padding: 72px 0 84px 0;
+		padding: 88px 0 96px 0;
 		text-align: center;
 		display: flex;
 		flex-direction: column;
@@ -388,80 +398,83 @@
 	}
 
 	.process-header {
-		margin-bottom: 48px;
-		max-width: 680px;
+		margin-bottom: 52px;
+		max-width: 780px;
 	}
 
 	.process-heading {
-		font-size: 26px;
+		font-family: 'Orbitron', sans-serif;
+		font-size: 32px;
 		font-weight: 700;
 		letter-spacing: -0.01em;
 		color: #202124;
 		text-transform: uppercase;
-		margin: 0 0 10px 0;
+		margin: 0 0 14px 0;
 	}
 
 	.process-subheading {
-		font-size: 16px;
+		font-size: 18px;
 		font-weight: 400;
 		line-height: 1.5;
 		color: #6b7280;
 		margin: 0;
 	}
 
+	/* Perfectly Aligned Equal 3-Card Grid with Centered Connectors */
 	.process-flow {
-		display: flex;
-		align-items: stretch;
-		justify-content: center;
+		display: grid;
+		grid-template-columns: 1fr auto 1fr auto 1fr;
+		align-items: center;
 		gap: 16px;
 		width: 100%;
-		max-width: 1080px;
-		margin-bottom: 52px;
+		max-width: 1100px;
+		margin-bottom: 56px;
 	}
 
 	:global(.process-card) {
-		flex: 1 !important;
+		height: 100% !important;
 		background-color: #ffffff !important;
 		border: 1px solid #e5e7eb !important;
 		border-radius: 12px !important;
-		padding: 28px 24px !important;
+		padding: 32px 28px !important;
 		box-shadow: none !important;
 		text-align: left !important;
 		display: flex !important;
 		flex-direction: column !important;
 		justify-content: flex-start !important;
-		transition: border-color 0.15s ease !important;
 		box-sizing: border-box !important;
+		transition: border-color 0.15s ease !important;
 	}
 
 	:global(.process-card:hover) {
-		border-color: #d1d5db !important;
+		border-color: #00b894 !important;
 	}
 
 	.step-header {
-		margin-bottom: 20px;
+		margin-bottom: 24px;
 	}
 
 	.step-number {
-		font-size: 13px;
+		font-size: 14px;
 		font-weight: 600;
 		color: #9ca3af;
-		letter-spacing: 0.04em;
+		letter-spacing: 0.05em;
 	}
 
 	.step-title {
-		font-size: 16px;
+		font-family: 'Orbitron', sans-serif;
+		font-size: 18px;
 		font-weight: 700;
-		letter-spacing: 0.03em;
-		color: #202124;
+		letter-spacing: 0.04em;
+		color: #00b894;
 		text-transform: uppercase;
-		margin: 0 0 8px 0;
+		margin: 0 0 12px 0;
 	}
 
 	.step-description {
 		font-size: 14px;
 		font-weight: 400;
-		line-height: 1.55;
+		line-height: 1.6;
 		color: #6b7280;
 		margin: 0;
 	}
@@ -470,13 +483,9 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		color: #9ca3af;
-		padding: 0 4px;
+		color: #00b894;
+		padding: 0 8px;
 		flex-shrink: 0;
-	}
-
-	:global(.arrow-icon) {
-		opacity: 0.5;
 	}
 
 	.process-conclusion {
@@ -485,33 +494,39 @@
 	}
 
 	.conclusion-text {
-		font-size: 22px;
+		font-family: 'Orbitron', sans-serif;
+		font-size: 34px;
 		font-weight: 700;
-		letter-spacing: 0.02em;
+		letter-spacing: -0.01em;
 		color: #202124;
 		text-transform: uppercase;
 		margin: 0;
 	}
 
+	.accent-text {
+		color: #00b894;
+	}
+
 	/* Responsive Breakpoints */
 	@media (max-width: 960px) {
 		.hero-headline {
-			font-size: 40px;
+			font-size: 48px;
 		}
 
 		.hero-tagline {
-			font-size: 19px;
-		}
-
-		.hero-description {
-			font-size: 15px;
-		}
-
-		.process-heading {
 			font-size: 22px;
 		}
 
+		.hero-description {
+			font-size: 17px;
+		}
+
+		.process-heading {
+			font-size: 26px;
+		}
+
 		.process-flow {
+			display: flex;
 			flex-direction: column;
 			align-items: center;
 			gap: 16px;
@@ -519,7 +534,7 @@
 
 		:global(.process-card) {
 			width: 100% !important;
-			max-width: 480px !important;
+			max-width: 500px !important;
 		}
 
 		.process-arrow {
@@ -528,7 +543,7 @@
 		}
 
 		.conclusion-text {
-			font-size: 19px;
+			font-size: 26px;
 		}
 	}
 
@@ -539,7 +554,7 @@
 		}
 
 		.brand-text {
-			font-size: 17px;
+			font-size: 18px;
 		}
 
 		.desktop-nav {
@@ -559,43 +574,43 @@
 		}
 
 		.hero-section {
-			padding-top: 60px;
-			padding-bottom: 48px;
+			padding-top: 68px;
+			padding-bottom: 56px;
 		}
 
 		.hero-headline {
-			font-size: 30px;
-			margin-bottom: 12px;
-		}
-
-		.hero-tagline {
-			font-size: 17px;
+			font-size: 34px;
 			margin-bottom: 14px;
 		}
 
+		.hero-tagline {
+			font-size: 18px;
+			margin-bottom: 16px;
+		}
+
 		.hero-description {
-			font-size: 14px;
-			margin-bottom: 24px;
+			font-size: 15px;
+			margin-bottom: 28px;
 		}
 
 		.process-section {
-			padding: 48px 0 56px 0;
+			padding: 56px 0 64px 0;
 		}
 
 		.process-header {
-			margin-bottom: 32px;
+			margin-bottom: 36px;
 		}
 
 		.process-heading {
-			font-size: 20px;
+			font-size: 22px;
 		}
 
 		.process-subheading {
-			font-size: 14px;
+			font-size: 15px;
 		}
 
 		.conclusion-text {
-			font-size: 17px;
+			font-size: 20px;
 		}
 	}
 </style>
