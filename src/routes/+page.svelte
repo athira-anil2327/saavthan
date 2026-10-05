@@ -75,7 +75,7 @@
 		<!-- Hero Section -->
 		<section class="hero-section">
 			<h1 class="hero-headline">
-				SECURE YOUR CUSTOMER.
+				SECURE YOUR<br />CUSTOMER.
 			</h1>
 
 			<p class="hero-tagline">
