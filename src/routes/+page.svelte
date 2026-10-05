@@ -165,24 +165,6 @@
 				</h3>
 			</div>
 		</section>
-
-		<!-- Subtle Divider -->
-		<div class="divider-container">
-			<hr class="section-divider" />
-		</div>
-
-		<!-- Final CTA Section -->
-		<section class="final-cta-section">
-			<h2 class="final-cta-headline">
-				TAKE CONTROL OF YOUR DATA.
-			</h2>
-
-			<div class="final-cta-wrapper">
-				<Button href="/login" class="vault-primary-button">
-					Get Started
-				</Button>
-			</div>
-		</section>
 	</main>
 </div>
 
@@ -227,7 +209,7 @@
 		font-family: 'Orbitron', sans-serif;
 		font-size: 20px;
 		font-weight: 700;
-		letter-spacing: 0.05em;
+		letter-spacing: 0.08em;
 		color: #202124;
 		transition: color 0.15s ease;
 	}
@@ -245,6 +227,7 @@
 	.nav-item {
 		font-size: 14px;
 		font-weight: 500;
+		letter-spacing: 0.02em;
 		color: #6b7280;
 		text-decoration: none;
 		transition: color 0.15s ease;
@@ -292,6 +275,7 @@
 	.mobile-nav-item {
 		font-size: 15px;
 		font-weight: 500;
+		letter-spacing: 0.02em;
 		color: #6b7280;
 		text-decoration: none;
 		padding: 8px 12px;
@@ -338,7 +322,7 @@
 		font-size: 74px;
 		font-weight: 700;
 		line-height: 1.05;
-		letter-spacing: -0.02em;
+		letter-spacing: 0.05em;
 		color: #202124;
 		text-transform: uppercase;
 		margin: 0 0 18px 0;
@@ -346,10 +330,11 @@
 	}
 
 	.hero-tagline {
-		font-family: 'Orbitron', sans-serif;
+		font-family: inherit;
 		font-size: 26px;
 		font-weight: 600;
 		line-height: 1.3;
+		letter-spacing: 0.05em;
 		color: #d96f7a;
 		margin: 0 0 20px 0;
 		max-width: 820px;
@@ -359,6 +344,7 @@
 		font-size: 19px;
 		font-weight: 400;
 		line-height: 1.5;
+		letter-spacing: 0.03em;
 		color: #6b7280;
 		max-width: 650px;
 		margin: 0 0 36px 0;
@@ -376,6 +362,7 @@
 		color: #ffffff !important;
 		font-size: 15px !important;
 		font-weight: 500 !important;
+		letter-spacing: 0.03em !important;
 		border-radius: 8px !important;
 		border: none !important;
 		box-shadow: none !important;
@@ -421,7 +408,7 @@
 		font-family: 'Orbitron', sans-serif;
 		font-size: 36px;
 		font-weight: 700;
-		letter-spacing: -0.01em;
+		letter-spacing: 0.05em;
 		color: #202124;
 		text-transform: uppercase;
 		margin: 0 0 14px 0;
@@ -431,6 +418,7 @@
 		font-size: 19px;
 		font-weight: 400;
 		line-height: 1.5;
+		letter-spacing: 0.02em;
 		color: #6b7280;
 		margin: 0;
 	}
@@ -472,14 +460,14 @@
 		font-size: 14px;
 		font-weight: 600;
 		color: #9ca3af;
-		letter-spacing: 0.05em;
+		letter-spacing: 0.08em;
 	}
 
 	.step-title {
 		font-family: 'Orbitron', sans-serif;
 		font-size: 20px;
 		font-weight: 700;
-		letter-spacing: 0.05em;
+		letter-spacing: 0.08em;
 		color: #202124;
 		text-transform: uppercase;
 		margin: 0 0 12px 0;
@@ -489,6 +477,7 @@
 		font-size: 14px;
 		font-weight: 400;
 		line-height: 1.6;
+		letter-spacing: 0.02em;
 		color: #6b7280;
 		margin: 0;
 	}
@@ -515,34 +504,10 @@
 		font-family: 'Orbitron', sans-serif;
 		font-size: 36px;
 		font-weight: 700;
-		letter-spacing: -0.01em;
+		letter-spacing: 0.05em;
 		color: #202124;
 		text-transform: uppercase;
 		margin: 0;
-	}
-
-	/* Final CTA Section */
-	.final-cta-section {
-		padding: 88px 0 110px 0;
-		text-align: center;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-	}
-
-	.final-cta-headline {
-		font-family: 'Orbitron', sans-serif;
-		font-size: 34px;
-		font-weight: 700;
-		letter-spacing: -0.01em;
-		color: #202124;
-		text-transform: uppercase;
-		margin: 0 0 28px 0;
-	}
-
-	.final-cta-wrapper {
-		display: flex;
-		justify-content: center;
 	}
 
 	/* Responsive Breakpoints */
@@ -580,10 +545,6 @@
 		}
 
 		.conclusion-text {
-			font-size: 28px;
-		}
-
-		.final-cta-headline {
 			font-size: 28px;
 		}
 	}
@@ -652,15 +613,6 @@
 
 		.conclusion-text {
 			font-size: 22px;
-		}
-
-		.final-cta-section {
-			padding: 60px 0 80px 0;
-		}
-
-		.final-cta-headline {
-			font-size: 22px;
-			margin-bottom: 22px;
 		}
 	}
 </style>
