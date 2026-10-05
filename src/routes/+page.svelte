@@ -15,7 +15,7 @@
 	/>
 	<link rel="preconnect" href="https://fonts.googleapis.com" />
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
-	<link href="https://fonts.googleapis.com/css2?family=Zen+Dots&display=swap" rel="stylesheet" />
+	<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700&display=swap" rel="stylesheet" />
 </svelte:head>
 
 <div class="vault-page">
@@ -187,7 +187,7 @@
 </div>
 
 <style>
-	@import url('https://fonts.googleapis.com/css2?family=Zen+Dots&display=swap');
+	@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700&display=swap');
 
 	/* Page Base Layout */
 	.vault-page {
@@ -224,10 +224,10 @@
 	}
 
 	.brand-text {
-		font-family: 'Zen Dots', sans-serif;
+		font-family: 'Orbitron', sans-serif;
 		font-size: 20px;
 		font-weight: 700;
-		letter-spacing: 0.04em;
+		letter-spacing: 0.05em;
 		color: #202124;
 		transition: color 0.15s ease;
 	}
@@ -334,25 +334,25 @@
 	}
 
 	.hero-headline {
-		font-family: 'Zen Dots', sans-serif;
-		font-size: 72px;
+		font-family: 'Orbitron', sans-serif;
+		font-size: 74px;
 		font-weight: 700;
 		line-height: 1.05;
 		letter-spacing: -0.02em;
 		color: #202124;
 		text-transform: uppercase;
 		margin: 0 0 18px 0;
-		max-width: 920px;
+		max-width: 960px;
 	}
 
 	.hero-tagline {
-		font-family: 'Zen Dots', sans-serif;
+		font-family: 'Orbitron', sans-serif;
 		font-size: 26px;
-		font-weight: 700;
+		font-weight: 600;
 		line-height: 1.3;
 		color: #d96f7a;
 		margin: 0 0 20px 0;
-		max-width: 800px;
+		max-width: 820px;
 	}
 
 	.hero-description {
@@ -418,7 +418,7 @@
 	}
 
 	.process-heading {
-		font-family: 'Zen Dots', sans-serif;
+		font-family: 'Orbitron', sans-serif;
 		font-size: 36px;
 		font-weight: 700;
 		letter-spacing: -0.01em;
@@ -476,10 +476,10 @@
 	}
 
 	.step-title {
-		font-family: 'Zen Dots', sans-serif;
+		font-family: 'Orbitron', sans-serif;
 		font-size: 20px;
 		font-weight: 700;
-		letter-spacing: 0.04em;
+		letter-spacing: 0.05em;
 		color: #202124;
 		text-transform: uppercase;
 		margin: 0 0 12px 0;
@@ -512,7 +512,7 @@
 	}
 
 	.conclusion-text {
-		font-family: 'Zen Dots', sans-serif;
+		font-family: 'Orbitron', sans-serif;
 		font-size: 36px;
 		font-weight: 700;
 		letter-spacing: -0.01em;
@@ -531,7 +531,7 @@
 	}
 
 	.final-cta-headline {
-		font-family: 'Zen Dots', sans-serif;
+		font-family: 'Orbitron', sans-serif;
 		font-size: 34px;
 		font-weight: 700;
 		letter-spacing: -0.01em;
