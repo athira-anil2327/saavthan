@@ -170,7 +170,7 @@
 					<div class="relative group rounded-xl bg-[#18181B] text-[#F4F4F5] p-4 font-mono text-sm overflow-x-auto border border-[#27272A]">
 						<button
 							type="button"
-							onclick={() => copyToClipboard("git clone https://github.com/athira-anil2327/vault.git\ncd vault", "clone-cmd")}
+							onclick={() => copyToClipboard("git clone https://github.com/athira-anil2327/saavthan.git\ncd saavthan", "clone-cmd")}
 							class="absolute top-3 right-3 p-1.5 rounded-md bg-[#27272A] hover:bg-[#3F3F46] text-[#A1A1AA] hover:text-white transition-colors cursor-pointer"
 							aria-label="Copy to clipboard"
 						>
@@ -180,8 +180,8 @@
 								<Copy class="size-4" />
 							{/if}
 						</button>
-						<pre class="pr-10 leading-relaxed"><span class="text-[#71717A] select-none">$ </span>git clone https://github.com/athira-anil2327/vault.git
-<span class="text-[#71717A] select-none">$ </span>cd vault</pre>
+						<pre class="pr-10 leading-relaxed"><span class="text-[#71717A] select-none">$ </span>git clone https://github.com/athira-anil2327/saavthan.git
+<span class="text-[#71717A] select-none">$ </span>cd saavthan</pre>
 					</div>
 				</section>
 

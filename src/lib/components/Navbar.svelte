@@ -10,7 +10,7 @@
 
 	let mobileMenuOpen = $state(false);
 
-	const githubRepoUrl = "https://github.com/athira-anil2327/vault";
+	const githubRepoUrl = "https://github.com/athira-anil2327/saavthan";
 
 	// Determine active path from props or $app/state
 	let pathname = $derived(currentPath ?? page.url.pathname);

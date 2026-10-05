@@ -4,7 +4,7 @@
 	import { ExternalLink, Lock, ShieldCheck, Server, Menu, X } from "@lucide/svelte";
 
 	let mobileMenuOpen = $state(false);
-	const githubRepoUrl = "https://github.com/athira-anil2327/vault";
+	const githubRepoUrl = "https://github.com/athira-anil2327/saavthan";
 </script>
 
 <svelte:head>
