@@ -113,12 +113,20 @@
 						>
 							{plan.buttonText}
 						</a>
-					{:else}
-						<Button
-							class="w-full h-[44px] text-sm font-medium rounded-lg transition-all cursor-pointer shadow-none {plan.popular ? 'bg-[#FF7675] hover:bg-[#ff6261] text-white' : 'bg-white hover:bg-[#F8F9FA] text-[#202124] border border-[#E5E7EB]'}"
+					{:else if plan.name === 'Pro'}
+						<a
+							href="/login?plan=pro"
+							class="w-full h-[44px] text-sm font-medium rounded-lg transition-all cursor-pointer shadow-none inline-flex items-center justify-center bg-[#FF7675] hover:bg-[#ff6261] text-white"
 						>
 							{plan.buttonText}
-						</Button>
+						</a>
+					{:else}
+						<a
+							href="/login?plan=free"
+							class="w-full h-[44px] text-sm font-medium rounded-lg transition-all cursor-pointer shadow-none inline-flex items-center justify-center bg-white hover:bg-[#F8F9FA] text-[#202124] border border-[#E5E7EB]"
+						>
+							{plan.buttonText}
+						</a>
 					{/if}
 				</div>
 			</Card>

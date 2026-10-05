@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { Button } from '#lib/components/ui/button';
 	import { Separator } from '#lib/components/ui/separator';
 	import WindowsIcon from '#lib/components/icons/WindowsIcon.svelte';
 	import {
@@ -54,49 +53,37 @@
 				'Run Vault yourself. Deploy it on your own infrastructure and keep complete control over your data, access and updates.'
 		}
 	];
-
-	function scrollToWindowsDownload() {
-		const el = document.getElementById('windows-download');
-		if (el) {
-			el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-		}
-	}
 </script>
 
 <main class="w-full flex flex-col items-center">
 	<!-- 1. HERO SECTION -->
-	<section class="w-full max-w-5xl px-6 pt-10 sm:pt-12 md:pt-14 pb-0 flex flex-col items-center text-center">
+	<section class="w-full max-w-5xl px-6 pt-12 sm:pt-14 md:pt-16 pb-0 flex flex-col items-center text-center">
 		<!-- Version Pill -->
-		<div class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#FFF1F1] text-xs font-medium text-[#FF7675] mb-3">
+		<div class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#FFF1F1] text-xs font-medium text-[#FF7675] mb-3.5">
 			<span>●</span>
 			<span>v1.0.0</span>
 		</div>
 
-		<!-- Hero Heading -->
-		<h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-[56px] font-bold tracking-tight text-[#202124] leading-[1.06] mb-4 select-none">
-			<span>SECURE YOUR</span><br />
-			<span>CUSTOMER.</span>
+		<!-- Tagline / Secondary Heading (20-24px, bold, dark, single line) -->
+		<h2 class="text-xl sm:text-2xl font-bold tracking-tight text-[#202124] mb-2.5 select-none whitespace-nowrap">
+			SECURE YOUR CUSTOMER.
+		</h2>
+
+		<!-- Main Hero Heading (Download Saavthan: 52-60px, single line on desktop) -->
+		<h1 class="text-4xl sm:text-5xl md:text-[56px] font-bold tracking-tight text-[#202124] leading-[1.1] mb-4 select-none sm:whitespace-nowrap inline-flex items-center justify-center gap-3">
+			<span>Download</span>
+			<span class="text-[#FF7675]">Saavthan</span>
 		</h1>
 
 		<!-- Hero Supporting Text -->
-		<p class="text-base sm:text-lg text-[#6B7280] max-w-xl leading-relaxed mb-6 font-normal">
-			<span>A simple, secure and self-hosted</span><br />
-			<span>way to manage your data.</span>
+		<p class="text-base sm:text-lg text-[#6B7280] max-w-2xl leading-relaxed mb-8 font-normal">
+			<span>A simple, powerful platform to organise, manage and keep everything in one place.</span><br class="hidden sm:inline" />
+			<span>Choose your operating system to get started.</span>
 		</p>
 
-		<!-- Get Started Button (keeps current behavior: scrolls to Windows download panel) -->
-		<div>
-			<Button
-				onclick={scrollToWindowsDownload}
-				class="bg-[#FF7675] hover:bg-[#ff6261] text-white px-6 h-[44px] text-sm font-medium rounded-lg transition-all cursor-pointer shadow-none"
-			>
-				Get Started
-			</Button>
-		</div>
-
 		<!-- 2. WINDOWS DOWNLOAD BOX -->
-		<div id="windows-download" class="w-full max-w-[960px] mt-8 sm:mt-10 text-left scroll-mt-24">
-			<div class="bg-white border border-[#E5E7EB] rounded-2xl p-8 sm:p-10 md:p-12 shadow-[0_4px_24px_-6px_rgba(0,0,0,0.04)] grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 items-center">
+		<div id="windows-download" class="w-full max-w-[960px] text-left">
+			<div class="bg-white border border-[#E5E7EB] rounded-2xl p-8 sm:p-10 md:p-12 shadow-[0_12px_30px_rgba(0,0,0,0.06),0_4px_12px_rgba(255,118,117,0.04)] grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 items-center">
 				<!-- LEFT COLUMN (approx 38-40%) -->
 				<div class="md:col-span-5 flex flex-col items-center text-center w-full md:pr-6">
 					<!-- Windows Icon in 80px soft circular container -->
@@ -112,7 +99,7 @@
 					<!-- Download for Windows Button (navigates to /start plan options) -->
 					<a
 						href="/start"
-						class="w-full max-w-[230px] bg-[#FF7675] hover:bg-[#ff6261] text-white text-sm font-medium h-[44px] rounded-full inline-flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-none mb-4"
+						class="w-full max-w-[230px] bg-[#FF7675] hover:bg-[#ff6261] text-white text-sm font-medium h-[44px] rounded-full inline-flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-[0_2px_8px_rgba(255,118,117,0.25)] hover:shadow-[0_4px_12px_rgba(255,118,117,0.3)] mb-4"
 					>
 						<Download class="w-4 h-4 shrink-0" />
 						<span>Download for Windows</span>
