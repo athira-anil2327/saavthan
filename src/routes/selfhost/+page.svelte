@@ -49,9 +49,9 @@
 	/>
 </svelte:head>
 
-<div class="min-h-screen bg-[#FFFFFF] text-[#202124] flex flex-col font-sans antialiased selection:bg-[#fff0f0] selection:text-[#ff7675]">
+<div class="min-h-screen bg-[#FFFFFF] text-[#202124] flex flex-col font-sans antialiased selection:bg-[#FFF1F2] selection:text-[#D96F7A]">
 	<!-- Public Navbar -->
-	<Navbar currentPath="/selfhost" />
+	<Navbar currentPath="/selfhost" variant="vault" />
 
 	<!-- Main Documentation Layout -->
 	<div class="max-w-[1400px] w-full mx-auto px-6 md:px-12 xl:px-16 flex-1 flex flex-col md:flex-row">
@@ -68,11 +68,11 @@
 					<button
 						type="button"
 						onclick={() => scrollToSection(section.id)}
-						class="w-full text-left px-3 py-2 rounded-lg text-sm transition-colors cursor-pointer flex items-center justify-between {activeSection === section.id ? 'bg-[#fff0f0] text-[#ff7675] font-semibold' : 'text-[#6B7280] hover:bg-[#F8F9FA] hover:text-[#202124]'}"
+						class="w-full text-left px-3 py-2 rounded-lg text-sm transition-colors cursor-pointer flex items-center justify-between {activeSection === section.id ? 'bg-[#FFF1F2] text-[#D96F7A] font-semibold' : 'text-[#6B7280] hover:bg-[#F8F9FA] hover:text-[#202124]'}"
 					>
 						<span>{section.label}</span>
 						{#if activeSection === section.id}
-							<ChevronRight class="size-3.5 text-[#ff7675]" />
+							<ChevronRight class="size-3.5 text-[#D96F7A]" />
 						{/if}
 					</button>
 				{/each}
@@ -86,7 +86,7 @@
 					<button
 						type="button"
 						onclick={() => scrollToSection(section.id)}
-						class="shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors {activeSection === section.id ? 'bg-[#ff7675] text-white' : 'bg-[#F8F9FA] text-[#6B7280] border border-[#E5E7EB]'}"
+						class="shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors {activeSection === section.id ? 'bg-[#D96F7A] text-white' : 'bg-[#F8F9FA] text-[#6B7280] border border-[#E5E7EB]'}"
 					>
 						{section.label}
 					</button>
@@ -170,7 +170,7 @@
 					<div class="relative group rounded-xl bg-[#18181B] text-[#F4F4F5] p-4 font-mono text-sm overflow-x-auto border border-[#27272A]">
 						<button
 							type="button"
-							onclick={() => copyToClipboard("git clone https://github.com/athira-anil2327/saavthan.git\ncd saavthan", "clone-cmd")}
+							onclick={() => copyToClipboard("git clone https://github.com/athira-anil2327/saavthan.git vault\ncd vault", "clone-cmd")}
 							class="absolute top-3 right-3 p-1.5 rounded-md bg-[#27272A] hover:bg-[#3F3F46] text-[#A1A1AA] hover:text-white transition-colors cursor-pointer"
 							aria-label="Copy to clipboard"
 						>
@@ -180,8 +180,8 @@
 								<Copy class="size-4" />
 							{/if}
 						</button>
-						<pre class="pr-10 leading-relaxed"><span class="text-[#71717A] select-none">$ </span>git clone https://github.com/athira-anil2327/saavthan.git
-<span class="text-[#71717A] select-none">$ </span>cd saavthan</pre>
+						<pre class="pr-10 leading-relaxed"><span class="text-[#71717A] select-none">$ </span>git clone https://github.com/athira-anil2327/saavthan.git vault
+<span class="text-[#71717A] select-none">$ </span>cd vault</pre>
 					</div>
 				</section>
 
