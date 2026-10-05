@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Button } from "#lib/components/ui/button/index.js";
 	import * as Card from "#lib/components/ui/card/index.js";
-	import { ExternalLink, Lock, ShieldCheck, Server, Menu, X } from "@lucide/svelte";
+	import { ExternalLink, ArrowRight, Menu, X } from "@lucide/svelte";
 
 	let mobileMenuOpen = $state(false);
 	const githubRepoUrl = "https://github.com/athira-anil2327/saavthan";
@@ -13,6 +13,9 @@
 		name="description"
 		content="A zero-trace workspace for secure document access on shared computers. Protect your client. Leave no trace."
 	/>
+	<link rel="preconnect" href="https://fonts.googleapis.com" />
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+	<link href="https://fonts.googleapis.com/css2?family=Zen+Dots&display=swap" rel="stylesheet" />
 </svelte:head>
 
 <div class="vault-page">
@@ -98,43 +101,68 @@
 			<hr class="section-divider" />
 		</div>
 
-		<!-- Why Vault Section -->
-		<section class="why-section">
-			<h2 class="why-heading">WHY VAULT</h2>
+		<!-- Process Section (Built for Shared Computers) -->
+		<section class="process-section">
+			<div class="process-header">
+				<h2 class="process-heading">
+					BUILT FOR SHARED COMPUTERS
+				</h2>
+				<p class="process-subheading">
+					Protect every customer session from the moment it starts to the moment it ends.
+				</p>
+			</div>
 
-			<div class="features-grid">
-				<!-- Feature 1: Private -->
-				<Card.Root class="feature-card">
-					<div class="feature-icon-wrapper">
-						<Lock size={20} strokeWidth={1.8} />
+			<!-- Three Sequential Process Blocks with Arrows -->
+			<div class="process-flow">
+				<!-- Step 01: ISOLATE -->
+				<Card.Root class="process-card">
+					<div class="step-header">
+						<span class="step-number">01</span>
 					</div>
-					<h3 class="feature-title">PRIVATE</h3>
-					<p class="feature-description">
-						Your data stays under your control.
+					<h3 class="step-title">ISOLATE</h3>
+					<p class="step-description">
+						A private environment is created for every session.
 					</p>
 				</Card.Root>
 
-				<!-- Feature 2: Secure -->
-				<Card.Root class="feature-card">
-					<div class="feature-icon-wrapper">
-						<ShieldCheck size={20} strokeWidth={1.8} />
+				<!-- Process Arrow Connector -->
+				<div class="process-arrow" aria-hidden="true">
+					<ArrowRight size={22} class="arrow-icon" />
+				</div>
+
+				<!-- Step 02: WORK -->
+				<Card.Root class="process-card">
+					<div class="step-header">
+						<span class="step-number">02</span>
 					</div>
-					<h3 class="feature-title">SECURE</h3>
-					<p class="feature-description">
-						Your data is protected.
+					<h3 class="step-title">WORK</h3>
+					<p class="step-description">
+						Customers can safely access, download and print documents.
 					</p>
 				</Card.Root>
 
-				<!-- Feature 3: Self-hosted -->
-				<Card.Root class="feature-card">
-					<div class="feature-icon-wrapper">
-						<Server size={20} strokeWidth={1.8} />
+				<!-- Process Arrow Connector -->
+				<div class="process-arrow" aria-hidden="true">
+					<ArrowRight size={22} class="arrow-icon" />
+				</div>
+
+				<!-- Step 03: WIPE -->
+				<Card.Root class="process-card">
+					<div class="step-header">
+						<span class="step-number">03</span>
 					</div>
-					<h3 class="feature-title">SELF-HOSTED</h3>
-					<p class="feature-description">
-						Run Vault on your own infrastructure.
+					<h3 class="step-title">WIPE</h3>
+					<p class="step-description">
+						When the session ends, the environment disappears.
 					</p>
 				</Card.Root>
+			</div>
+
+			<!-- Process Conclusion Statement -->
+			<div class="process-conclusion">
+				<h3 class="conclusion-text">
+					ONE SESSION. ZERO TRACE.
+				</h3>
 			</div>
 		</section>
 
@@ -159,6 +187,8 @@
 </div>
 
 <style>
+	@import url('https://fonts.googleapis.com/css2?family=Zen+Dots&display=swap');
+
 	/* Page Base Layout */
 	.vault-page {
 		min-height: 100vh;
@@ -194,9 +224,10 @@
 	}
 
 	.brand-text {
-		font-size: 19px;
+		font-family: 'Zen Dots', sans-serif;
+		font-size: 20px;
 		font-weight: 700;
-		letter-spacing: 0.08em;
+		letter-spacing: 0.04em;
 		color: #202124;
 		transition: color 0.15s ease;
 	}
@@ -303,22 +334,25 @@
 	}
 
 	.hero-headline {
-		font-size: 74px;
+		font-family: 'Zen Dots', sans-serif;
+		font-size: 72px;
 		font-weight: 700;
 		line-height: 1.05;
 		letter-spacing: -0.02em;
 		color: #202124;
 		text-transform: uppercase;
-		margin: 0 0 16px 0;
-		max-width: 900px;
+		margin: 0 0 18px 0;
+		max-width: 920px;
 	}
 
 	.hero-tagline {
+		font-family: 'Zen Dots', sans-serif;
 		font-size: 26px;
-		font-weight: 600;
+		font-weight: 700;
 		line-height: 1.3;
 		color: #d96f7a;
 		margin: 0 0 20px 0;
+		max-width: 800px;
 	}
 
 	.hero-description {
@@ -369,71 +403,121 @@
 		width: 100%;
 	}
 
-	/* Why Vault Section */
-	.why-section {
-		padding: 88px 0;
+	/* Process Section */
+	.process-section {
+		padding: 96px 0 100px 0;
 		text-align: center;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
 	}
 
-	.why-heading {
-		font-size: 28px;
-		font-weight: 600;
-		letter-spacing: 0.04em;
+	.process-header {
+		margin-bottom: 56px;
+		max-width: 780px;
+	}
+
+	.process-heading {
+		font-family: 'Zen Dots', sans-serif;
+		font-size: 36px;
+		font-weight: 700;
+		letter-spacing: -0.01em;
 		color: #202124;
 		text-transform: uppercase;
-		margin: 0 0 48px 0;
+		margin: 0 0 14px 0;
 	}
 
-	.features-grid {
-		display: grid;
-		grid-template-columns: repeat(3, 1fr);
-		gap: 28px;
-		text-align: left;
+	.process-subheading {
+		font-size: 19px;
+		font-weight: 400;
+		line-height: 1.5;
+		color: #6b7280;
+		margin: 0;
 	}
 
-	:global(.feature-card) {
+	.process-flow {
+		display: flex;
+		align-items: stretch;
+		justify-content: center;
+		gap: 16px;
+		width: 100%;
+		max-width: 1140px;
+		margin-bottom: 64px;
+	}
+
+	:global(.process-card) {
+		flex: 1 !important;
 		background-color: #ffffff !important;
 		border: 1px solid #e5e7eb !important;
 		border-radius: 12px !important;
 		padding: 32px 28px !important;
 		box-shadow: none !important;
-		transition: border-color 0.15s ease !important;
+		text-align: left !important;
 		display: flex !important;
 		flex-direction: column !important;
-		align-items: flex-start !important;
+		justify-content: flex-start !important;
+		transition: border-color 0.15s ease !important;
+		box-sizing: border-box !important;
 	}
 
-	:global(.feature-card:hover) {
+	:global(.process-card:hover) {
 		border-color: #d1d5db !important;
 	}
 
-	.feature-icon-wrapper {
-		width: 42px;
-		height: 42px;
-		border-radius: 8px;
-		background-color: #f8f9fa;
-		border: 1px solid #e5e7eb;
+	.step-header {
+		margin-bottom: 24px;
+	}
+
+	.step-number {
+		font-size: 14px;
+		font-weight: 600;
+		color: #9ca3af;
+		letter-spacing: 0.05em;
+	}
+
+	.step-title {
+		font-family: 'Zen Dots', sans-serif;
+		font-size: 20px;
+		font-weight: 700;
+		letter-spacing: 0.04em;
+		color: #202124;
+		text-transform: uppercase;
+		margin: 0 0 12px 0;
+	}
+
+	.step-description {
+		font-size: 14px;
+		font-weight: 400;
+		line-height: 1.6;
+		color: #6b7280;
+		margin: 0;
+	}
+
+	.process-arrow {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		color: #202124;
-		margin-bottom: 20px;
+		color: #9ca3af;
+		padding: 0 4px;
+		flex-shrink: 0;
 	}
 
-	.feature-title {
-		font-size: 15px;
-		font-weight: 600;
-		letter-spacing: 0.06em;
+	:global(.arrow-icon) {
+		opacity: 0.5;
+	}
+
+	.process-conclusion {
+		text-align: center;
+		padding-top: 8px;
+	}
+
+	.conclusion-text {
+		font-family: 'Zen Dots', sans-serif;
+		font-size: 36px;
+		font-weight: 700;
+		letter-spacing: -0.01em;
 		color: #202124;
 		text-transform: uppercase;
-		margin: 0 0 8px 0;
-	}
-
-	.feature-description {
-		font-size: 14px;
-		font-weight: 400;
-		line-height: 1.5;
-		color: #6b7280;
 		margin: 0;
 	}
 
@@ -447,7 +531,8 @@
 	}
 
 	.final-cta-headline {
-		font-size: 28px;
+		font-family: 'Zen Dots', sans-serif;
+		font-size: 34px;
 		font-weight: 700;
 		letter-spacing: -0.01em;
 		color: #202124;
@@ -463,7 +548,7 @@
 	/* Responsive Breakpoints */
 	@media (max-width: 960px) {
 		.hero-headline {
-			font-size: 54px;
+			font-size: 52px;
 		}
 
 		.hero-tagline {
@@ -474,9 +559,32 @@
 			font-size: 18px;
 		}
 
-		.features-grid {
-			grid-template-columns: 1fr;
-			gap: 20px;
+		.process-heading {
+			font-size: 30px;
+		}
+
+		.process-flow {
+			flex-direction: column;
+			align-items: center;
+			gap: 16px;
+		}
+
+		:global(.process-card) {
+			width: 100% !important;
+			max-width: 520px !important;
+		}
+
+		.process-arrow {
+			transform: rotate(90deg);
+			padding: 4px 0;
+		}
+
+		.conclusion-text {
+			font-size: 28px;
+		}
+
+		.final-cta-headline {
+			font-size: 28px;
 		}
 	}
 
@@ -484,6 +592,10 @@
 		.vault-navbar {
 			padding: 0 20px;
 			height: 64px;
+		}
+
+		.brand-text {
+			font-size: 18px;
 		}
 
 		.desktop-nav {
@@ -508,12 +620,12 @@
 		}
 
 		.hero-headline {
-			font-size: 38px;
-			margin-bottom: 12px;
+			font-size: 36px;
+			margin-bottom: 14px;
 		}
 
 		.hero-tagline {
-			font-size: 19px;
+			font-size: 18px;
 			margin-bottom: 16px;
 		}
 
@@ -522,13 +634,24 @@
 			margin-bottom: 28px;
 		}
 
-		.why-section {
-			padding: 60px 0;
+		.process-section {
+			padding: 64px 0 72px 0;
 		}
 
-		.why-heading {
+		.process-header {
+			margin-bottom: 40px;
+		}
+
+		.process-heading {
 			font-size: 24px;
-			margin-bottom: 32px;
+		}
+
+		.process-subheading {
+			font-size: 16px;
+		}
+
+		.conclusion-text {
+			font-size: 22px;
 		}
 
 		.final-cta-section {
