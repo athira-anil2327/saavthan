@@ -260,15 +260,11 @@ def verify_device_request(request: Request, body_bytes: bytes, device_id: str, t
 
     return dict(device)
 
-HTML_FILE = Path(__file__).parent / "manager.html"
-
 # --- API Endpoints ---
 
-@app.get("/", response_class=HTMLResponse)
-async def serve_ui():
-    if not HTML_FILE.exists():
-        return HTMLResponse("<h1>manager.html not found</h1>", status_code=404)
-    return HTMLResponse(HTML_FILE.read_text(encoding="utf-8"))
+@app.get("/")
+async def root():
+    return {"status": "ok", "service": "manager-api"}
 
 @app.get("/healthz")
 async def healthz():

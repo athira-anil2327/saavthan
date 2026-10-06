@@ -502,12 +502,10 @@ async def test_ui_and_helper_endpoints(tmp_path):
     async with AsyncClient(transport=mgr_transport, base_url="http://testmanager") as mgr_client, \
                AsyncClient(transport=server_transport, base_url="http://testserver") as srv_client:
 
-        # 1. Test manager UI HTML serving
+        # 1. Test manager API root
         mgr_ui_res = await mgr_client.get("/")
         assert mgr_ui_res.status_code == 200
-        assert "text/html" in mgr_ui_res.headers["content-type"]
-        assert "Central Maker Console" in mgr_ui_res.text
-        assert "pane-transparency" in mgr_ui_res.text
+        assert mgr_ui_res.json()["service"] == "manager-api"
 
         # 2. Test manager tokens listing
         tokens_res = await mgr_client.get("/api/v1/admin/tokens")
@@ -516,12 +514,15 @@ async def test_ui_and_helper_endpoints(tmp_path):
         assert len(tokens_list) >= 1
         assert tokens_list[0]["cafe_slug"] == cafe_slug
 
-        # 3. Test server UI HTML serving
+        # 3. Test server API root & active upload portal serving
         srv_ui_res = await srv_client.get("/")
         assert srv_ui_res.status_code == 200
-        assert "text/html" in srv_ui_res.headers["content-type"]
-        assert "Privacy Kiosk Hub & Secure Portal" in srv_ui_res.text
-        assert "view-customer-portal" in srv_ui_res.text
+        assert srv_ui_res.json()["service"] == "saavthan-server"
+
+        portal_res = await srv_client.get("/p", headers={"Accept": "text/html"})
+        assert portal_res.status_code == 200
+        assert "text/html" in portal_res.headers["content-type"]
+        assert "view-customer-portal" in portal_res.text
 
         # 4. Check auth status endpoint before bootstrap
         auth_st = await srv_client.get("/api/v1/auth/status")

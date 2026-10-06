@@ -28,7 +28,7 @@ This is the simplified, clean MVP architecture for the **Vault** project. Instea
 # Terminal 1: Run Manager on port 8000
 uv run python manager.py serve --port 8000
 ```
-Open **`http://localhost:8000/`** in your browser to access the **Central Maker Console** (`manager.html`):
+Open **`http://localhost:5173/`** in your browser to access the **Central Maker Console** (proxies to Manager API on port 8000):
 - **Fleet Command:** View real-time enrolled nodes, active OS image versions, heartbeats, and update statuses.
 - **Café Tenants:** Register new Akshaya centers and internet cafés (`slug`, `name`, `email`).
 - **Enrollment Tokens:** Issue single-use or multi-use zero-trust node provisioning tokens with 1-click clipboard copy.
@@ -42,7 +42,7 @@ Open **`http://localhost:8000/`** in your browser to access the **Central Maker 
 # Terminal 2: Run Hub Node on port 8443
 uv run python server.py serve --port 8443
 ```
-Open **`http://localhost:8443/`** in your browser to access the **Staff / Kiosk Console** (`server.html`):
+Open **`http://localhost:5174/`** in your browser to access the **Staff / Kiosk Console** (proxies to Server API on port 8443):
 - **First-Time Bootstrap / Login:** Creates the initial owner account using **Argon2id**.
   - *Edge Case (Lockout):* 5 consecutive failed attempts locks the login screen with a live visual countdown timer.
 - **Node Auto-Registration (Cloudflare Vanity Endpoint):** Enter Central Manager URL (`http://localhost:8000`) and the token issued above to link the node and assign its vanity slug (`vault.laddu.cc/<slug>`).
@@ -79,4 +79,4 @@ uv run pytest test_mvp.py -v
 - **Wipe Verification:** Ephemeral workspaces are isolated under `data_server/workspaces/<session_id>`. At session termination, the directory is recursively deleted and verified empty before clearing `pending_wipes`.
 - **Wipe-on-Boot (Crash Recovery):** If power is abruptly disconnected mid-session, the server checks `pending_wipes` on boot and purges residual directories before accepting any new kiosk sessions.
 - **OTA Image Authenticity:** Downloaded `.bin` images are verified against both the manager's Ed25519 digital signature and the manifest's SHA-256 checksum before activation. Tampered images are rejected immediately without altering the active image slot.
-- **Air-Gapped & Offline Ready:** Both `manager.html` and `server.html` have **ZERO external CDN dependencies** (no external fonts, scripts, or CSS frameworks). They run 100% self-contained in local internet cafe LANs.
+- **Air-Gapped & Offline Ready:** The standalone Customer Drop Portal (`upload.html`) has **ZERO external CDN dependencies** (no external fonts, scripts, or CSS frameworks) and runs 100% self-contained in local internet cafe LANs.

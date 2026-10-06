@@ -394,14 +394,11 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Vault Service Provider Node", version="1.0.0-mvp", lifespan=lifespan)
 security = HTTPBearer(auto_error=False)
 
-SERVER_HTML_FILE = Path(__file__).parent / "server.html"
 UPLOAD_HTML_FILE = Path(__file__).parent / "upload.html"
 
-@app.get("/", response_class=HTMLResponse)
-async def serve_ui():
-    if not SERVER_HTML_FILE.exists():
-        return HTMLResponse("<h1>server.html not found</h1>", status_code=404)
-    return HTMLResponse(SERVER_HTML_FILE.read_text(encoding="utf-8"))
+@app.get("/")
+async def root():
+    return {"status": "ok", "service": "saavthan-server", "portal": "/p"}
 
 # Authentication dependency
 async def require_staff(
@@ -694,8 +691,7 @@ async def get_drop_info(request: Request, code: Optional[str] = None, slug: Opti
     if ("text/html" in accept or "text/*" in accept or "*/*" in accept or not accept) and "application/json" not in accept:
         if UPLOAD_HTML_FILE.exists():
             return HTMLResponse(UPLOAD_HTML_FILE.read_text(encoding="utf-8"))
-        elif SERVER_HTML_FILE.exists():
-            return HTMLResponse(SERVER_HTML_FILE.read_text(encoding="utf-8"))
+        raise HTTPException(status_code=404, detail="Upload portal not found")
 
     conn = get_db()
     clean_code = (code or "").strip().upper()
@@ -1785,9 +1781,9 @@ def cli_reset_password(username: str, password: str):
 async def serve_cafe_ui(slug: str):
     if slug in ("api", "healthz", "p", "upload", "uploads", "favicon.ico"):
         raise HTTPException(status_code=404, detail="Not found")
-    if not SERVER_HTML_FILE.exists():
-        return HTMLResponse("<h1>server.html not found</h1>", status_code=404)
-    return HTMLResponse(SERVER_HTML_FILE.read_text(encoding="utf-8"))
+    if UPLOAD_HTML_FILE.exists():
+        return HTMLResponse(UPLOAD_HTML_FILE.read_text(encoding="utf-8"))
+    raise HTTPException(status_code=404, detail="Portal not found")
 
 def main():
     parser = argparse.ArgumentParser(description="Vault Service Provider Node")
