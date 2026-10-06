@@ -1,0 +1,200 @@
+{
+  ".svelte-kit/generated/build/env/config.js": {
+    "file": "env.js",
+    "name": "env",
+    "src": ".svelte-kit/generated/build/env/config.js",
+    "isEntry": true
+  },
+  "_AppSidebar.js": {
+    "file": "chunks/AppSidebar.js",
+    "name": "AppSidebar",
+    "imports": [
+      "_server.js",
+      "_state.js",
+      "_Icon.js",
+      "_nav.svelte.js"
+    ]
+  },
+  "_Icon.js": {
+    "file": "chunks/Icon.js",
+    "name": "Icon",
+    "imports": [
+      "_server.js"
+    ]
+  },
+  "_check.js": {
+    "file": "chunks/check.js",
+    "name": "check",
+    "imports": [
+      "_server.js",
+      "_Icon.js"
+    ]
+  },
+  "_file-spreadsheet.js": {
+    "file": "chunks/file-spreadsheet.js",
+    "name": "file-spreadsheet",
+    "imports": [
+      "_server.js",
+      "_Icon.js"
+    ]
+  },
+  "_internal.js": {
+    "file": "chunks/internal.js",
+    "name": "internal",
+    "imports": [
+      "_server-errors.js"
+    ]
+  },
+  "_nav.svelte.js": {
+    "file": "chunks/nav.svelte.js",
+    "name": "nav.svelte",
+    "imports": [
+      "_server.js"
+    ]
+  },
+  "_refresh-cw.js": {
+    "file": "chunks/refresh-cw.js",
+    "name": "refresh-cw",
+    "imports": [
+      "_server.js",
+      "_Icon.js"
+    ]
+  },
+  "_saavthan-api.js": {
+    "file": "chunks/saavthan-api.js",
+    "name": "saavthan-api",
+    "imports": [
+      "_server.js",
+      "_Icon.js"
+    ]
+  },
+  "_server-errors.js": {
+    "file": "chunks/server-errors.js",
+    "name": "server-errors"
+  },
+  "_server.js": {
+    "file": "chunks/server.js",
+    "name": "server"
+  },
+  "_state.js": {
+    "file": "chunks/state.js",
+    "name": "state",
+    "imports": [
+      "_server-errors.js",
+      "_server.js"
+    ]
+  },
+  "node_modules/@sveltejs/kit/src/runtime/app/server/remote/index.js": {
+    "file": "remote-entry.js",
+    "name": "remote-entry",
+    "src": "node_modules/@sveltejs/kit/src/runtime/app/server/remote/index.js",
+    "isEntry": true,
+    "imports": [
+      "_internal.js",
+      "_server-errors.js"
+    ]
+  },
+  "node_modules/@sveltejs/kit/src/runtime/components/error.svelte": {
+    "file": "entries/fallbacks/error.svelte.js",
+    "name": "entries/fallbacks/error.svelte",
+    "src": "node_modules/@sveltejs/kit/src/runtime/components/error.svelte",
+    "isEntry": true,
+    "imports": [
+      "_server.js",
+      "_state.js"
+    ]
+  },
+  "node_modules/@sveltejs/kit/src/runtime/server/index.js": {
+    "file": "index.js",
+    "name": "index",
+    "src": "node_modules/@sveltejs/kit/src/runtime/server/index.js",
+    "isEntry": true,
+    "imports": [
+      "_internal.js"
+    ],
+    "dynamicImports": [
+      "node_modules/@sveltejs/kit/src/runtime/server/instance.js"
+    ]
+  },
+  "node_modules/@sveltejs/kit/src/runtime/server/instance.js": {
+    "file": "chunks/instance.js",
+    "name": "instance",
+    "src": "node_modules/@sveltejs/kit/src/runtime/server/instance.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "_internal.js",
+      "_server-errors.js",
+      ".svelte-kit/generated/build/env/config.js",
+      "_server.js"
+    ]
+  },
+  "src/routes/+layout.svelte": {
+    "file": "entries/pages/_layout.svelte.js",
+    "name": "entries/pages/_layout.svelte",
+    "src": "src/routes/+layout.svelte",
+    "isEntry": true,
+    "imports": [
+      "_server.js",
+      "_state.js",
+      "_Icon.js",
+      "_refresh-cw.js",
+      "_nav.svelte.js"
+    ],
+    "css": [
+      "_app/immutable/assets/_layout.DiEnw9Xh.css"
+    ]
+  },
+  "src/routes/+page.svelte": {
+    "file": "entries/pages/_page.svelte.js",
+    "name": "entries/pages/_page.svelte",
+    "src": "src/routes/+page.svelte",
+    "isEntry": true,
+    "imports": [
+      "_server.js",
+      "_state.js",
+      "_Icon.js",
+      "_AppSidebar.js",
+      "_file-spreadsheet.js",
+      "_saavthan-api.js"
+    ]
+  },
+  "src/routes/upload/+layout.svelte": {
+    "file": "entries/pages/upload/_layout.svelte.js",
+    "name": "entries/pages/upload/_layout.svelte",
+    "src": "src/routes/upload/+layout.svelte",
+    "isEntry": true,
+    "imports": [
+      "_server.js"
+    ]
+  },
+  "src/routes/upload/+page.svelte": {
+    "file": "entries/pages/upload/_page.svelte.js",
+    "name": "entries/pages/upload/_page.svelte",
+    "src": "src/routes/upload/+page.svelte",
+    "isEntry": true,
+    "imports": [
+      "_server.js",
+      "_state.js",
+      "_Icon.js",
+      "_check.js",
+      "_file-spreadsheet.js",
+      "_saavthan-api.js",
+      "_refresh-cw.js"
+    ]
+  },
+  "src/routes/workspace/+page.svelte": {
+    "file": "entries/pages/workspace/_page.svelte.js",
+    "name": "entries/pages/workspace/_page.svelte",
+    "src": "src/routes/workspace/+page.svelte",
+    "isEntry": true,
+    "imports": [
+      "_server.js",
+      "_state.js",
+      "_Icon.js",
+      "_AppSidebar.js",
+      "_check.js",
+      "_saavthan-api.js",
+      "_refresh-cw.js"
+    ]
+  }
+}

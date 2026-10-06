@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { Button } from '#lib/components/ui/button';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { Lock, Mail, ArrowRight, ShieldCheck } from 'lucide-svelte';
@@ -16,7 +15,7 @@
 		e.preventDefault();
 		loading = true;
 		setTimeout(() => {
-			goto('/images');
+			goto('/manager');
 		}, 300);
 	}
 </script>
@@ -25,19 +24,19 @@
 	<title>Sign In - Vault</title>
 </svelte:head>
 
-<main class="w-full flex-1 flex flex-col items-center justify-center py-16 px-6">
-	<div class="w-full max-w-[420px] bg-white border border-[#E5E7EB] rounded-2xl p-8 sm:p-10 shadow-[0_4px_24px_-6px_rgba(0,0,0,0.04)]">
+<main class="w-full flex-1 flex flex-col items-center justify-center py-16 px-6 bg-background text-foreground transition-colors">
+	<div class="w-full max-w-[420px] bg-card border border-border rounded-2xl p-8 sm:p-10 shadow-md">
 		<!-- Brand & Header -->
 		<div class="flex flex-col items-center text-center mb-8">
-			<div class="w-12 h-12 rounded-full bg-[#FFF1F1] flex items-center justify-center text-[#FF7675] mb-4">
+			<div class="w-12 h-12 rounded-xl bg-muted flex items-center justify-center text-primary mb-4 border border-border shadow-xs">
 				<ShieldCheck class="w-6 h-6" />
 			</div>
 			
-			<h1 class="text-2xl font-bold tracking-tight text-[#202124]">
+			<h1 class="text-2xl font-bold tracking-tight text-foreground">
 				{isSignUp ? 'Create your Vault account' : 'Sign in to Vault'}
 			</h1>
 			
-			<p class="text-sm text-[#6B7280] mt-1.5 leading-relaxed">
+			<p class="text-sm text-muted-foreground mt-1.5 leading-relaxed">
 				{#if isPro}
 					Activate your 14-day Pro trial and access your secure workspace.
 				{:else}
@@ -47,18 +46,18 @@
 		</div>
 
 		<!-- Auth Mode Switcher Tabs -->
-		<div class="grid grid-cols-2 p-1 bg-[#F8F9FA] rounded-xl border border-[#E5E7EB] mb-6 text-sm font-medium">
+		<div class="grid grid-cols-2 p-1 bg-muted rounded-xl border border-border mb-6 text-sm font-medium">
 			<button
 				type="button"
 				onclick={() => (isSignUp = false)}
-				class="py-2 rounded-lg transition-all text-center { !isSignUp ? 'bg-white text-[#202124] shadow-sm font-semibold' : 'text-[#6B7280] hover:text-[#202124]' }"
+				class="py-2 rounded-lg transition-all text-center cursor-pointer { !isSignUp ? 'bg-card text-foreground shadow-xs font-semibold' : 'text-muted-foreground hover:text-foreground' }"
 			>
 				Sign In
 			</button>
 			<button
 				type="button"
 				onclick={() => (isSignUp = true)}
-				class="py-2 rounded-lg transition-all text-center { isSignUp ? 'bg-white text-[#202124] shadow-sm font-semibold' : 'text-[#6B7280] hover:text-[#202124]' }"
+				class="py-2 rounded-lg transition-all text-center cursor-pointer { isSignUp ? 'bg-card text-foreground shadow-xs font-semibold' : 'text-muted-foreground hover:text-foreground' }"
 			>
 				Sign Up
 			</button>
@@ -68,7 +67,7 @@
 		<form onsubmit={handleSubmit} class="space-y-4">
 			{#if isSignUp}
 				<div>
-					<label for="name" class="block text-xs font-semibold uppercase tracking-wider text-[#6B7280] mb-1.5">
+					<label for="name" class="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
 						Full Name
 					</label>
 					<input
@@ -76,17 +75,17 @@
 						type="text"
 						bind:value={name}
 						placeholder="Jane Doe"
-						class="w-full px-3.5 py-2.5 bg-white border border-[#E5E7EB] rounded-lg text-sm text-[#202124] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#FF7675] focus:ring-1 focus:ring-[#FF7675] transition-all"
+						class="w-full px-3.5 py-2.5 bg-card border border-border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary shadow-xs transition-all"
 					/>
 				</div>
 			{/if}
 
 			<div>
-				<label for="email" class="block text-xs font-semibold uppercase tracking-wider text-[#6B7280] mb-1.5">
+				<label for="email" class="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
 					Email Address
 				</label>
 				<div class="relative">
-					<div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#9CA3AF]">
+					<div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-muted-foreground">
 						<Mail class="w-4 h-4" />
 					</div>
 					<input
@@ -95,24 +94,24 @@
 						bind:value={email}
 						required
 						placeholder="jane@company.com"
-						class="w-full pl-10 pr-3.5 py-2.5 bg-white border border-[#E5E7EB] rounded-lg text-sm text-[#202124] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#FF7675] focus:ring-1 focus:ring-[#FF7675] transition-all"
+						class="w-full pl-10 pr-3.5 py-2.5 bg-card border border-border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary shadow-xs transition-all"
 					/>
 				</div>
 			</div>
 
 			<div>
 				<div class="flex items-center justify-between mb-1.5">
-					<label for="password" class="block text-xs font-semibold uppercase tracking-wider text-[#6B7280]">
+					<label for="password" class="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
 						Password
 					</label>
 					{#if !isSignUp}
-						<a href="#forgot" class="text-xs text-[#FF7675] hover:underline">
+						<a href="#forgot" class="text-xs text-primary hover:underline font-medium">
 							Forgot password?
 						</a>
 					{/if}
 				</div>
 				<div class="relative">
-					<div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#9CA3AF]">
+					<div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-muted-foreground">
 						<Lock class="w-4 h-4" />
 					</div>
 					<input
@@ -120,31 +119,22 @@
 						type="password"
 						bind:value={password}
 						required
-						placeholder="••••••••"
-						class="w-full pl-10 pr-3.5 py-2.5 bg-white border border-[#E5E7EB] rounded-lg text-sm text-[#202124] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#FF7675] focus:ring-1 focus:ring-[#FF7675] transition-all"
+						placeholder="••••••••••••"
+						class="w-full pl-10 pr-3.5 py-2.5 bg-card border border-border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary shadow-xs transition-all"
 					/>
 				</div>
 			</div>
 
-			<Button
-				type="submit"
-				disabled={loading}
-				class="w-full h-[44px] bg-[#FF7675] hover:bg-[#ff6261] text-white text-sm font-medium rounded-lg transition-all cursor-pointer shadow-none flex items-center justify-center gap-2 mt-2"
-			>
-				<span>{isSignUp ? 'Create Account & Continue' : 'Sign In to Workspace'}</span>
-				<ArrowRight class="w-4 h-4" />
-			</Button>
+			<div class="pt-2">
+				<button
+					type="submit"
+					disabled={loading}
+					class="w-full h-10 rounded-lg text-xs font-semibold bg-primary hover:opacity-90 text-primary-foreground transition-opacity cursor-pointer inline-flex items-center justify-center gap-2 shadow-xs disabled:opacity-50"
+				>
+					<span>{loading ? 'Authenticating...' : isSignUp ? 'Create Account' : 'Sign In'}</span>
+					<ArrowRight class="w-3.5 h-3.5" />
+				</button>
+			</div>
 		</form>
-
-		<!-- Bottom Notice / Quick Access -->
-		<div class="mt-6 pt-6 border-t border-[#E5E7EB] text-center">
-			<a
-				href="/images"
-				class="text-xs text-[#6B7280] hover:text-[#202124] inline-flex items-center gap-1 transition-colors"
-			>
-				<span>Skip to workspace preview</span>
-				<span>→</span>
-			</a>
-		</div>
 	</div>
 </main>

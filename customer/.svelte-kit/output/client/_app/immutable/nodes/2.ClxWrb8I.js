@@ -1,0 +1,1 @@
+import{D as e,S as t,W as n,k as r,rt as i}from"../chunks/D40v1Fcj.js";var a=r(`<div class="w-full flex-1 flex flex-col items-center justify-start py-8 px-4 sm:px-8 lg:px-12 min-h-[calc(100vh-56px)]"><div class="w-full max-w-6xl mx-auto"><!></div></div>`);function o(r,o){var s=a(),c=n(s),l=n(c);t(l,()=>o.children),i(c),i(s),e(r,s)}export{o as component};
