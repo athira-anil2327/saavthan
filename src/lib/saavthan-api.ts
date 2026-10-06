@@ -129,12 +129,22 @@ export async function loginStaff(username: string, password: string): Promise<bo
 		if (res.ok) {
 			const data = await res.json();
 			setStoredToken(data.access_token);
+			if (typeof window !== 'undefined' && data.role) {
+				localStorage.setItem('vault_user_role', data.role);
+			}
 			return true;
 		}
 	} catch (e) {
 		console.error('[Saavthan API] Login failed:', e);
 	}
 	return false;
+}
+
+export function getStoredRole(): string | null {
+	if (typeof window !== 'undefined') {
+		return localStorage.getItem('vault_user_role');
+	}
+	return null;
 }
 
 /**

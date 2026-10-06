@@ -2,7 +2,7 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { Lock, Mail, ArrowRight, ShieldCheck, AlertCircle } from 'lucide-svelte';
-	import { loginStaff, bootstrapStaff, getAuthStatus } from '$lib/saavthan-api';
+	import { loginStaff, bootstrapStaff, getAuthStatus, getStoredRole } from '$lib/saavthan-api';
 
 	let isSignUp = $state(false);
 	let email = $state('');
@@ -31,7 +31,12 @@
 
 			const success = await loginStaff(email, password);
 			if (success) {
-				goto('/manager');
+				const role = getStoredRole();
+				if (role === 'operator' || role === 'staff' || email.toLowerCase().includes('operator')) {
+					goto('/workspace');
+				} else {
+					goto('/manager');
+				}
 			} else {
 				errorMessage = 'Invalid credentials or unable to reach node authentication service.';
 			}

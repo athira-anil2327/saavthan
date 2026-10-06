@@ -7,6 +7,9 @@
 
 	const navLinks = [
 		{ label: 'Overview', href: '/' },
+		{ label: 'Workspace', href: '/workspace' },
+		{ label: 'Drop Portal', href: '/upload' },
+		{ label: 'Manager', href: '/manager' },
 		{ label: 'Pricing', href: '/start' },
 		{ label: 'Self-Host', href: '/selfhost' }
 	];

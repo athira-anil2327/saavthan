@@ -1,1 +1,0 @@
-import{D as e,G as t,O as n,h as r,r as i,t as a}from"./D40v1Fcj.js";import{t as o}from"./DWGHoGJS.js";function s(s,c){let l=a(c,[`children`,`$$slots`,`$$events`,`$$legacy`]),u=[[`path`,{d:`M20 6 9 17l-5-5`}]];o(s,i({name:`check`},()=>l,{get iconNode(){return u},children:(i,a)=>{var o=n(),s=t(o);r(s,c,`default`,{},null),e(i,o)},$$slots:{default:!0}}))}export{s as t};
