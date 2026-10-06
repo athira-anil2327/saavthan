@@ -828,8 +828,12 @@ async def deliver_file_to_workspace(session_id: str, upload_id: str, staff: dict
     dek = unb64u(upload["dek_b64"])
     ws_path = Path(sess["workspace_path"])
 
-    # Reconstruct decrypted file directly into workspace
-    out_file = ws_path / upload["display_name"]
+    # Reconstruct decrypted file directly into workspace with path traversal protection
+    safe_filename = Path(upload["display_name"]).name
+    out_file = (ws_path / safe_filename).resolve()
+    if not str(out_file).startswith(str(ws_path.resolve())):
+        conn.close()
+        raise HTTPException(status_code=400, detail="Invalid destination file path")
     with open(out_file, "wb") as out_f:
         for c in chunks:
             chunk_file = STAGING_DIR / upload_id / f"{c['idx']}.chunk"
@@ -1165,7 +1169,7 @@ async def api_enroll_node(req: EnrollNodeRequest, staff: dict = Depends(require_
                 "status": "enrolled",
                 "device_id": data["device_id"],
                 "cafe_slug": data["cafe_slug"],
-                "portal_url": f"https://vault.laddu.cc/{data['cafe_slug']}"
+                "portal_url": f"https://{VANITY_DOMAIN}/{data['cafe_slug']}"
             }
     except httpx.RequestError as e:
         raise HTTPException(status_code=502, detail=f"Failed to connect to manager at {mgr_url}: {e}")
@@ -1204,7 +1208,7 @@ def cli_enroll(manager_url: str, token: str):
         print("--- AUTO-REGISTRATION SUCCESSFUL ---")
         print(f"Device ID: {data['device_id']}")
         print(f"Assigned Café Slug: {data['cafe_slug']}")
-        print(f"Public Portal Endpoint: vault.laddu.cc/{data['cafe_slug']}")
+        print(f"Public Portal Endpoint: https://{VANITY_DOMAIN}/{data['cafe_slug']}")
     except Exception as e:
         print(f"Connection error: {e}")
 
