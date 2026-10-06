@@ -1,3 +1,14 @@
+<!--
+  @component WorkspacePage
+  @description Operator Enclave & Kiosk Workspace Console (Svelte 5 Runes).
+  
+  Responsibilities:
+  - Ephemeral session management with crypto-shredding and verified wipe on exit.
+  - Common & custom drop portal generation (QR codes, size limits, TTL expiration).
+  - Secure document ingestion, automated workspace delivery, and cryptographic receipts.
+  - Real-time transparency log status and tamper verification.
+  - Strict shadcn typography, card layout, and responsive mobile drawers.
+-->
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import {

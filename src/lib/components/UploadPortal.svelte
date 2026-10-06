@@ -1,3 +1,15 @@
+<!--
+  @component UploadPortal
+  @description Unified Customer Drop Portal (Svelte 5 Runes).
+  
+  Features:
+  - Drag-and-drop file ingestion matching Vault peach/white theme and shadcn design.
+  - Client-side cryptographic chunking and in-browser Merkle tree hashing.
+  - Unified dynamic action button: transforms from "Upload Now" to "DELETE NOW"
+    once files have been handed over to the server.
+  - Stationary Lucide trash bin icon (no continuous spinning after upload).
+  - Remote deletion mechanism allowing users to purge their staged files instantly.
+-->
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
