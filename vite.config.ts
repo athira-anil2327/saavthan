@@ -25,6 +25,10 @@ export default defineConfig({
 			'/api/v1/log': {
 				target: 'http://127.0.0.1:8000',
 				changeOrigin: true
+			},
+			'/api/v1': {
+				target: 'http://127.0.0.1:8443',
+				changeOrigin: true
 			}
 		}
 	}
