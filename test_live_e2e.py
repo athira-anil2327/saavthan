@@ -22,6 +22,8 @@ def run_manager(db_path, port):
     uvicorn.run(manager.app, host="127.0.0.1", port=port, log_level="warning")
 
 def run_server(server_dir, port):
+    os.environ["VAULT_AUTO_TUNNEL"] = "0"
+    os.environ["VAULT_PORT"] = str(port)
     sdir = Path(server_dir)
     server.DATA_DIR = sdir
     server.DB_PATH = sdir / "server.db"

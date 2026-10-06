@@ -1,22 +1,45 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
-	import { Lock, Mail, ArrowRight, ShieldCheck } from 'lucide-svelte';
+	import { Lock, Mail, ArrowRight, ShieldCheck, AlertCircle } from 'lucide-svelte';
+	import { loginStaff, bootstrapStaff, getAuthStatus } from '$lib/saavthan-api';
 
 	let isSignUp = $state(false);
 	let email = $state('');
 	let password = $state('');
 	let name = $state('');
 	let loading = $state(false);
+	let errorMessage = $state<string | null>(null);
 
 	const isPro = $derived(page.url.searchParams.get('plan') === 'pro');
 
-	function handleSubmit(e: SubmitEvent) {
+	async function handleSubmit(e: SubmitEvent) {
 		e.preventDefault();
 		loading = true;
-		setTimeout(() => {
-			goto('/manager');
-		}, 300);
+		errorMessage = null;
+		try {
+			if (isSignUp) {
+				const status = await getAuthStatus();
+				if (!status.bootstrapped) {
+					const ok = await bootstrapStaff(email, password);
+					if (ok) {
+						goto('/manager');
+						return;
+					}
+				}
+			}
+
+			const success = await loginStaff(email, password);
+			if (success) {
+				goto('/manager');
+			} else {
+				errorMessage = 'Invalid credentials or unable to reach node authentication service.';
+			}
+		} catch (err: any) {
+			errorMessage = err?.message || 'Authentication failed.';
+		} finally {
+			loading = false;
+		}
 	}
 </script>
 
@@ -65,6 +88,13 @@
 
 		<!-- Auth Form -->
 		<form onsubmit={handleSubmit} class="space-y-4">
+			{#if errorMessage}
+				<div class="p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-xs flex items-center gap-2">
+					<AlertCircle class="w-4 h-4 shrink-0" />
+					<span>{errorMessage}</span>
+				</div>
+			{/if}
+
 			{#if isSignUp}
 				<div>
 					<label for="name" class="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">

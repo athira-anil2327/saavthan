@@ -19,6 +19,9 @@
 		ShieldCheck,
 		ShieldAlert,
 		DownloadCloud,
+		Download,
+		Loader2,
+		FileDown,
 		Plus,
 		KeyRound,
 		Lock,
@@ -43,10 +46,14 @@
 		enrollNode,
 		listUsers,
 		registerStaff,
+		downloadDecryptedFile,
+		fetchUploadReceipt,
+		listSessionFiles,
 		type SessionInfo,
 		type DropInfo,
 		type UploadRecord,
-		type SystemStatus
+		type SystemStatus,
+		type SessionFile
 	} from '#lib/saavthan-api';
 	import AppSidebar, { type SidebarItem } from '#lib/components/AppSidebar.svelte';
 
@@ -103,6 +110,9 @@
 	let wipeMessage = $state<string | null>(null);
 	let deliveringUploadId = $state<string | null>(null);
 	let deliverySuccessMessage = $state<string | null>(null);
+	let downloadingUploadId = $state<string | null>(null);
+	let isDeliveringAll = $state(false);
+	let workspaceFiles = $state<SessionFile[]>([]);
 
 	// New Drop Form
 	let newDropLabel = $state('');
@@ -129,6 +139,7 @@
 
 	// Receipt Modal
 	let activeReceipt = $state<UploadRecord | null>(null);
+	let receiptLoading = $state(false);
 
 	let pollInterval: ReturnType<typeof setInterval> | null = null;
 
@@ -150,8 +161,10 @@
 					started_at: active.started_at,
 					ended_at: active.ended_at
 				};
+				workspaceFiles = await listSessionFiles(active.id);
 			} else {
 				currentSession = null;
+				workspaceFiles = [];
 			}
 
 			// 3. Fetch drops
@@ -189,10 +202,12 @@
 			if (res && res.wipe_verified) {
 				wipeMessage = `Session ${currentSession.session_id.substring(0, 8)} obliterated. Workspace folder shredded, encryption keys destroyed.`;
 				currentSession = null;
+				workspaceFiles = [];
 				await loadAllData();
 			} else {
 				wipeMessage = `Wipe command executed.`;
 				currentSession = null;
+				workspaceFiles = [];
 				await loadAllData();
 			}
 		} finally {
@@ -215,6 +230,72 @@
 			}
 		} finally {
 			deliveringUploadId = null;
+		}
+	}
+
+	async function handleDeliverAll() {
+		if (!currentSession) {
+			alert('Please start an active session first.');
+			return;
+		}
+		isDeliveringAll = true;
+		deliverySuccessMessage = null;
+		try {
+			const pending = uploads.filter((u) => u.status !== 'delivered' && u.status !== 'wiped');
+			let count = 0;
+			for (const u of pending) {
+				try {
+					await deliverUpload(currentSession.session_id, u.id);
+					count++;
+				} catch (e) {
+					// Ignore
+				}
+			}
+			deliverySuccessMessage = `Delivered ${count} document(s) into workspace.`;
+			await loadAllData();
+		} finally {
+			isDeliveringAll = false;
+		}
+	}
+
+	async function handleDownloadFile(uploadId: string, displayName: string) {
+		downloadingUploadId = uploadId;
+		try {
+			// If not delivered yet, auto-deliver to workspace
+			if (currentSession?.session_id) {
+				const match = uploads.find((u) => u.id === uploadId);
+				if (match && match.status !== 'delivered') {
+					try {
+						await deliverUpload(currentSession.session_id, uploadId);
+						await loadAllData();
+					} catch (e) {
+						// Ignore
+					}
+				}
+			}
+			await downloadDecryptedFile(uploadId, displayName, currentSession?.session_id);
+		} finally {
+			downloadingUploadId = null;
+		}
+	}
+
+	async function openReceiptModal(u: UploadRecord) {
+		activeReceipt = u;
+		if (!u.receipt) {
+			receiptLoading = true;
+			try {
+				const full = await fetchUploadReceipt(u.id, u.drop_code);
+				if (full && activeReceipt && activeReceipt.id === u.id) {
+					activeReceipt = {
+						...activeReceipt,
+						receipt: full.receipt || full,
+						hub_sig: full.hub_sig || activeReceipt.hub_sig,
+						manager_ack_seq: full.manager_ack_seq || activeReceipt.manager_ack_seq
+					};
+				}
+			} finally {
+				receiptLoading = false;
+			}
 		}
 	}
 
@@ -462,6 +543,108 @@
 							{/if}
 						</div>
 
+						<!-- Ephemeral Workspace Files (Plaintext) -->
+						<div class="op-card bg-card border border-border rounded-xl p-4 sm:p-6 shadow-xs">
+							<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+								<div>
+									<div class="flex items-center gap-2">
+										<h3 class="text-sm sm:text-base font-semibold text-foreground">
+											Workspace Ephemeral Files (Plaintext)
+										</h3>
+										{#if currentSession}
+											<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+												RAM Mounted
+											</span>
+										{/if}
+									</div>
+									<p class="text-xs text-muted-foreground mt-0.5">
+										{workspaceFiles.length} decrypted document(s) residing in volatile kiosk workspace memory.
+									</p>
+								</div>
+
+							</div>
+
+							{#if !currentSession}
+								<div class="p-8 text-center border border-dashed border-border rounded-lg text-muted-foreground">
+									<FolderSync class="w-8 h-8 mx-auto mb-2 opacity-40" />
+									<p class="text-xs font-medium">No active session mounted</p>
+									<p class="text-[11px] mt-1 text-muted-foreground">Start an ephemeral workspace session above to begin receiving and decrypting files.</p>
+								</div>
+							{:else if workspaceFiles.length === 0}
+								<div class="p-8 text-center border border-dashed border-border rounded-lg text-muted-foreground">
+									<Inbox class="w-8 h-8 mx-auto mb-2 opacity-40 text-primary" />
+									<p class="text-xs font-medium text-foreground">Workspace mounted, no files delivered yet</p>
+									<p class="text-[11px] mt-1 text-muted-foreground max-w-sm mx-auto">
+										Files uploaded by customers are automatically transferred and decrypted into this secure session.
+									</p>
+								</div>
+							{:else}
+								<div class="overflow-x-auto">
+									<table class="w-full text-xs text-left">
+										<thead>
+											<tr class="border-b border-border text-muted-foreground">
+												<th class="pb-2 font-medium">Document Name</th>
+												<th class="pb-2 font-medium">Size</th>
+												<th class="pb-2 font-medium">Status</th>
+												<th class="pb-2 font-medium text-right">Actions</th>
+											</tr>
+										</thead>
+										<tbody class="divide-y divide-border/60">
+											{#each workspaceFiles as f}
+												{@const matchedUpload = uploads.find(u => u.display_name === f.name || u.id === f.upload_id)}
+												<tr class="hover:bg-muted/30 transition-colors">
+													<td class="py-2.5 font-medium text-foreground">
+														<div class="flex items-center gap-2">
+															<FileText class="w-4 h-4 text-primary shrink-0" />
+															<span class="truncate max-w-[240px] sm:max-w-md">{f.name}</span>
+														</div>
+													</td>
+													<td class="py-2.5 font-mono text-muted-foreground">{formatBytes(f.size)}</td>
+													<td class="py-2.5">
+														<span class="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+															<CheckCircle2 class="w-3 h-3" />
+															<span>Decrypted Plaintext</span>
+														</span>
+													</td>
+													<td class="py-2.5 text-right">
+														<div class="inline-flex items-center gap-1.5">
+															<button
+																type="button"
+																onclick={() => handleDownloadFile(f.upload_id || '', f.name)}
+																disabled={downloadingUploadId === f.upload_id}
+																class="h-7 px-2.5 rounded-md text-[11px] font-semibold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1 shadow-xs"
+																title="Download decrypted document"
+															>
+																{#if downloadingUploadId === f.upload_id}
+																	<Loader2 class="w-3 h-3 animate-spin" />
+																	<span>Downloading...</span>
+																{:else}
+																	<Download class="w-3 h-3" />
+																	<span>Download</span>
+																{/if}
+															</button>
+
+															{#if matchedUpload}
+																<button
+																	type="button"
+																	onclick={() => openReceiptModal(matchedUpload)}
+																	class="h-7 px-2 rounded-md text-[11px] font-medium border border-border text-foreground hover:bg-muted transition-colors cursor-pointer flex items-center gap-1"
+																	title="View Cryptographic Receipt"
+																>
+																	<ShieldCheck class="w-3 h-3 text-primary" />
+																	<span>Receipt</span>
+																</button>
+															{/if}
+														</div>
+													</td>
+												</tr>
+											{/each}
+										</tbody>
+									</table>
+								</div>
+							{/if}
+						</div>
+
 						<!-- Session History Table (15 per page + Expand All Popup) -->
 						<div class="op-card bg-card border border-border rounded-xl p-4 sm:p-6 shadow-xs">
 							<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
@@ -619,7 +802,7 @@
 								<div>
 									<h2 class="text-base sm:text-lg font-semibold text-foreground">Live Customer Ingestions</h2>
 									<p class="text-xs text-muted-foreground mt-0.5">
-										Incoming files verified via tree-hash notarization. Deliver files to decrypt AES-256 staging into the active workspace.
+										Incoming customer files verified via Merkle tree-hash notarization and automatically transferred into the active workspace.
 									</p>
 								</div>
 								{#if deliverySuccessMessage}
@@ -679,26 +862,32 @@
 													</td>
 													<td class="py-3 text-right">
 														<div class="inline-flex items-center gap-1.5">
-															{#if u.status !== 'delivered'}
+															{#if u.status === 'delivered' || u.status === 'verified'}
 																<button
 																	type="button"
-																	onclick={() => handleDeliverUpload(u.id)}
-																	disabled={deliveringUploadId === u.id || !currentSession}
-																	class="h-7 px-2.5 rounded-md text-[11px] font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-50"
+																	onclick={() => handleDownloadFile(u.id, u.display_name)}
+																	disabled={downloadingUploadId === u.id}
+																	class="h-7 px-2.5 rounded-md text-[11px] font-semibold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1 shadow-xs"
+																	title="Download decrypted document"
 																>
-																	{deliveringUploadId === u.id ? 'Decrypting...' : 'Deliver to Workspace'}
+																	{#if downloadingUploadId === u.id}
+																		<Loader2 class="w-3 h-3 animate-spin" />
+																		<span>Downloading...</span>
+																	{:else}
+																		<Download class="w-3 h-3" />
+																		<span>Download</span>
+																	{/if}
 																</button>
 															{/if}
-															{#if u.receipt}
-																<button
-																	type="button"
-																	onclick={() => (activeReceipt = u)}
-																	class="h-7 px-2 rounded-md text-[11px] font-medium border border-border text-foreground hover:bg-muted transition-colors cursor-pointer"
-																	title="View Cryptographic Receipt"
-																>
-																	Receipt
-																</button>
-															{/if}
+															<button
+																type="button"
+																onclick={() => openReceiptModal(u)}
+																class="h-7 px-2 rounded-md text-[11px] font-medium border border-border text-foreground hover:bg-muted transition-colors cursor-pointer flex items-center gap-1"
+																title="View Cryptographic Receipt"
+															>
+																<ShieldCheck class="w-3 h-3 text-primary" />
+																<span>Receipt</span>
+															</button>
 														</div>
 													</td>
 												</tr>
@@ -721,9 +910,9 @@
 													<span class="text-muted-foreground">Status</span>
 													<div>
 														{#if u.status === 'delivered'}
-															<span class="font-medium text-primary">Delivered</span>
+															<span class="font-medium text-emerald-600 dark:text-emerald-400">Delivered</span>
 														{:else if u.status === 'verified'}
-															<span class="font-medium text-emerald-600 dark:text-emerald-400">Verified</span>
+															<span class="font-medium text-primary">Verified</span>
 														{:else}
 															<span class="font-medium text-amber-600 dark:text-amber-400">{u.status}</span>
 														{/if}
@@ -750,25 +939,30 @@
 											</div>
 
 											<div class="pt-1 flex flex-col sm:flex-row gap-2">
-												{#if u.status !== 'delivered'}
+												{#if u.status === 'delivered' || u.status === 'verified'}
 													<button
 														type="button"
-														onclick={() => handleDeliverUpload(u.id)}
-														disabled={deliveringUploadId === u.id || !currentSession}
-														class="w-full h-8 px-3 rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5"
+														onclick={() => handleDownloadFile(u.id, u.display_name)}
+														disabled={downloadingUploadId === u.id}
+														class="w-full h-8 px-3 rounded-lg text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5 shadow-xs"
 													>
-														{deliveringUploadId === u.id ? 'Decrypting...' : 'Deliver to Workspace'}
+														{#if downloadingUploadId === u.id}
+															<Loader2 class="w-3.5 h-3.5 animate-spin" />
+															<span>Downloading...</span>
+														{:else}
+															<Download class="w-3.5 h-3.5" />
+															<span>Download</span>
+														{/if}
 													</button>
 												{/if}
-												{#if u.receipt}
-													<button
-														type="button"
-														onclick={() => (activeReceipt = u)}
-														class="w-full h-8 px-3 rounded-lg text-xs font-medium border border-border text-foreground hover:bg-muted transition-colors cursor-pointer flex items-center justify-center"
-													>
-														Receipt
-													</button>
-												{/if}
+												<button
+													type="button"
+													onclick={() => openReceiptModal(u)}
+													class="w-full h-8 px-3 rounded-lg text-xs font-medium border border-border text-foreground hover:bg-muted transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+												>
+													<ShieldCheck class="w-3.5 h-3.5 text-primary" />
+													<span>Receipt</span>
+												</button>
 											</div>
 										</div>
 									{/each}
@@ -782,145 +976,68 @@
 				<!-- SECTION 3: DROP PORTALS MANAGEMENT                       -->
 				<!-- ======================================================== -->
 				{#if activeSection === 'drops'}
-					<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-						<!-- Left: Create Drop Form -->
-						<div class="op-card bg-card border border-border rounded-xl p-4 sm:p-6 shadow-xs h-full flex flex-col justify-between min-h-0 lg:min-h-[380px]">
-							<div>
-								<h2 class="text-base font-semibold text-foreground mb-1">Generate Drop Portal</h2>
-								<p class="text-xs text-muted-foreground mb-4 sm:mb-5">
-									Creates an isolated ingestion endpoint accessible via QR code, Vanity URL, or Cloudflare tunnel.
+					<div class="max-w-xl mx-auto w-full">
+						<!-- Main Drop Portal Creation Panel -->
+						<div class="bg-card border border-border rounded-xl p-6 sm:p-8 shadow-xs">
+							<div class="mb-5">
+								<h2 class="text-lg font-bold tracking-tight text-foreground mb-1">Generate Drop Portal</h2>
+								<p class="text-xs text-muted-foreground">
+									Configure secure ephemeral ingestion parameters including file size limit and cryptographic TTL expiry.
 								</p>
+							</div>
 
-								<form onsubmit={handleCreateDrop} class="space-y-3.5 sm:space-y-4">
+							<form onsubmit={handleCreateDrop} class="space-y-4">
+								<div>
+									<label for="droplabel" class="block text-xs font-medium text-foreground mb-1.5">Portal Label</label>
+									<input
+										id="droplabel"
+										type="text"
+										bind:value={newDropLabel}
+										placeholder="e.g. Counter Drop"
+										required
+										class="w-full h-9 px-3 rounded-lg text-xs bg-background border border-border text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+									/>
+								</div>
+								<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
 									<div>
-										<label for="droplabel" class="block text-xs font-medium text-foreground mb-1.5">Portal Label</label>
+										<label for="dropmax" class="block text-xs font-medium text-foreground mb-1.5">Max Size (MB)</label>
 										<input
-											id="droplabel"
-											type="text"
-											bind:value={newDropLabel}
-											placeholder="e.g. Counter Drop"
-											required
+											id="dropmax"
+											type="number"
+											bind:value={newDropMaxMb}
+											min="1"
+											max="500"
 											class="w-full h-9 px-3 rounded-lg text-xs bg-background border border-border text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
 										/>
 									</div>
-									<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-										<div>
-											<label for="dropmax" class="block text-xs font-medium text-foreground mb-1.5">Max Size (MB)</label>
-											<input
-												id="dropmax"
-												type="number"
-												bind:value={newDropMaxMb}
-												min="1"
-												max="500"
-												class="w-full h-9 px-3 rounded-lg text-xs bg-background border border-border text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-											/>
-										</div>
-										<div>
-											<label for="dropttl" class="block text-xs font-medium text-foreground mb-1.5">TTL (Minutes)</label>
-											<input
-												id="dropttl"
-												type="number"
-												bind:value={newDropTtlMinutes}
-												min="5"
-												max="1440"
-												class="w-full h-9 px-3 rounded-lg text-xs bg-background border border-border text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-											/>
-										</div>
+									<div>
+										<label for="dropttl" class="block text-xs font-medium text-foreground mb-1.5">TTL (Minutes)</label>
+										<input
+											id="dropttl"
+											type="number"
+											bind:value={newDropTtlMinutes}
+											min="5"
+											max="1440"
+											class="w-full h-9 px-3 rounded-lg text-xs bg-background border border-border text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+										/>
 									</div>
-									<button
-										type="submit"
-										disabled={isCreatingDrop}
-										class="w-full h-9 rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-opacity flex items-center justify-center gap-1.5 cursor-pointer mt-2"
-									>
-										<Plus class="w-3.5 h-3.5" />
-										<span>{isCreatingDrop ? 'Generating...' : 'Create Drop Portal'}</span>
-									</button>
-								</form>
-							</div>
+								</div>
+								<button
+									type="submit"
+									disabled={isCreatingDrop}
+									class="w-full h-9 rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90 shadow-xs transition-opacity flex items-center justify-center gap-1.5 cursor-pointer mt-4 disabled:opacity-50"
+								>
+									<Plus class="w-3.5 h-3.5" />
+									<span>{isCreatingDrop ? 'Generating...' : 'Create Drop Portal'}</span>
+								</button>
+							</form>
 
 							{#if dropCreatedMessage}
-								<div class="mt-3.5 p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 text-xs">
-									{dropCreatedMessage}
+								<div class="mt-4 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs flex items-center gap-2">
+									<CheckCircle2 class="w-4 h-4 shrink-0" />
+									<span>{dropCreatedMessage}</span>
 								</div>
 							{/if}
-						</div>
-
-						<!-- Right: Active Drops List -->
-						<div class="op-card bg-card border border-border rounded-xl p-4 sm:p-6 shadow-xs h-full flex flex-col justify-between min-h-0 lg:min-h-[380px]">
-							<div class="flex-1">
-								<h3 class="text-sm font-semibold text-foreground mb-1">Active Drop Endpoints</h3>
-								<p class="text-xs text-muted-foreground mb-4">
-									Live endpoints ready to receive files and route through encrypted storage.
-								</p>
-
-								{#if drops.length === 0}
-									<div class="py-12 sm:py-16 text-center text-muted-foreground flex flex-col items-center justify-center">
-										<Radio class="w-8 h-8 opacity-30 mb-2" />
-										<p class="text-xs">No active drops available.</p>
-										<p class="text-[11px] text-muted-foreground/70 mt-0.5">Generate a portal to establish a new ingest point.</p>
-									</div>
-								{:else}
-									<div class="space-y-3">
-										{#each drops as d}
-											<div class="p-3.5 rounded-lg border border-border bg-muted/20 space-y-2.5">
-												<div class="flex items-center justify-between gap-2">
-													<div class="flex items-center gap-2 min-w-0">
-														<span class="font-mono font-bold text-xs text-foreground bg-primary/10 text-primary px-2 py-0.5 rounded shrink-0">
-															{d.drop_code}
-														</span>
-														<span class="text-xs font-medium text-foreground truncate">{d.label || 'Drop Portal'}</span>
-													</div>
-													<button
-														type="button"
-														onclick={() => handleCloseDrop(d.drop_code)}
-														class="text-[11px] text-destructive hover:underline cursor-pointer font-medium shrink-0"
-													>
-														Close
-													</button>
-												</div>
-												<div class="space-y-1.5 text-[11px] text-muted-foreground">
-													<div class="flex items-center justify-between gap-2 bg-background/50 p-1.5 rounded border border-border/50">
-														<div class="flex items-center gap-1.5 min-w-0">
-															<span class="shrink-0">Local:</span>
-															<code class="font-mono text-foreground truncate">{d.local_portal_url}</code>
-														</div>
-														<button
-															type="button"
-															onclick={() => copyText(window.location.origin + d.local_portal_url, d.drop_code + '_local')}
-															class="text-muted-foreground hover:text-foreground cursor-pointer shrink-0 p-1"
-															title="Copy Local URL"
-														>
-															{#if copiedKey === d.drop_code + '_local'}
-																<Check class="w-3.5 h-3.5 text-emerald-500" />
-															{:else}
-																<Copy class="w-3.5 h-3.5" />
-															{/if}
-														</button>
-													</div>
-													<div class="flex items-center justify-between gap-2 bg-background/50 p-1.5 rounded border border-border/50">
-														<div class="flex items-center gap-1.5 min-w-0">
-															<span class="shrink-0">Vanity:</span>
-															<code class="font-mono text-foreground truncate">{d.vanity_url}</code>
-														</div>
-														<button
-															type="button"
-															onclick={() => copyText(d.vanity_url, d.drop_code + '_vanity')}
-															class="text-muted-foreground hover:text-foreground cursor-pointer shrink-0 p-1"
-															title="Copy Vanity URL"
-														>
-															{#if copiedKey === d.drop_code + '_vanity'}
-																<Check class="w-3.5 h-3.5 text-emerald-500" />
-															{:else}
-																<Copy class="w-3.5 h-3.5" />
-															{/if}
-														</button>
-													</div>
-												</div>
-											</div>
-										{/each}
-									</div>
-								{/if}
-							</div>
 						</div>
 					</div>
 				{/if}
@@ -1173,26 +1290,74 @@
 				</button>
 			</div>
 
-			<div class="space-y-2 text-xs">
-				<div>
-					<span class="text-muted-foreground block">Upload ID</span>
-					<code class="font-mono text-foreground font-semibold">{activeReceipt.id}</code>
+			{#if receiptLoading}
+				<div class="py-8 flex flex-col items-center justify-center gap-2 text-muted-foreground text-xs">
+					<Loader2 class="w-6 h-6 animate-spin text-primary" />
+					<span>Fetching cryptographic receipt from transparency log...</span>
 				</div>
-				<div>
-					<span class="text-muted-foreground block">Tree Hash</span>
-					<code class="font-mono text-emerald-500 break-all">{activeReceipt.tree_hash || activeReceipt.receipt?.tree_hash}</code>
+			{:else}
+				<div class="space-y-3 text-xs">
+					<div>
+						<span class="text-muted-foreground block">Document Name</span>
+						<span class="font-semibold text-foreground text-sm">{activeReceipt.display_name}</span>
+					</div>
+					<div>
+						<span class="text-muted-foreground block">Upload ID</span>
+						<code class="font-mono text-foreground font-semibold">{activeReceipt.id}</code>
+					</div>
+					<div>
+						<span class="text-muted-foreground block">Tree Hash</span>
+						<div class="flex items-center gap-1.5 mt-0.5">
+							<code class="font-mono text-emerald-500 break-all">{activeReceipt.tree_hash || activeReceipt.receipt?.tree_hash || 'Verified'}</code>
+							{#if activeReceipt.tree_hash || activeReceipt.receipt?.tree_hash}
+								<button
+									type="button"
+									onclick={() => copyText(activeReceipt?.tree_hash || activeReceipt?.receipt?.tree_hash || '', 'modal-hash')}
+									class="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer shrink-0"
+									title="Copy tree hash"
+								>
+									{#if copiedKey === 'modal-hash'}
+										<Check class="w-3.5 h-3.5 text-emerald-500" />
+									{:else}
+										<Copy class="w-3.5 h-3.5" />
+									{/if}
+								</button>
+							{/if}
+						</div>
+					</div>
+					<div>
+						<span class="text-muted-foreground block">Manager Ack Sequence</span>
+						<span class="font-bold text-foreground">#{activeReceipt.manager_ack_seq || (activeReceipt.receipt as any)?.manager_ack_seq || 1}</span>
+					</div>
+					{#if activeReceipt.receipt}
+						<div>
+							<span class="text-muted-foreground block">Raw Notarized JSON</span>
+							<pre class="font-mono text-[10px] p-3 rounded-lg bg-muted overflow-x-auto text-muted-foreground border border-border max-h-36">{JSON.stringify(activeReceipt.receipt, null, 2)}</pre>
+						</div>
+					{/if}
 				</div>
-				<div>
-					<span class="text-muted-foreground block">Manager Ack Sequence</span>
-					<span class="font-bold text-foreground">#{activeReceipt.manager_ack_seq || 1}</span>
-				</div>
-				<div>
-					<span class="text-muted-foreground block">Raw Notarized JSON</span>
-					<pre class="font-mono text-[10px] p-3 rounded-lg bg-muted overflow-x-auto text-muted-foreground border border-border">{JSON.stringify(activeReceipt.receipt, null, 2)}</pre>
-				</div>
-			</div>
+			{/if}
 
-			<div class="flex justify-end pt-2">
+			<div class="flex items-center justify-end gap-2 pt-2 border-t border-border">
+				{#if activeReceipt.receipt}
+					<button
+						type="button"
+						onclick={() => {
+							const jsonStr = JSON.stringify(activeReceipt?.receipt, null, 2);
+							const blob = new Blob([jsonStr], { type: 'application/json' });
+							const url = URL.createObjectURL(blob);
+							const a = document.createElement('a');
+							a.href = url;
+							a.download = `receipt-${activeReceipt?.id}.json`;
+							a.click();
+							URL.revokeObjectURL(url);
+						}}
+						class="h-8 px-3 rounded-lg text-xs font-medium border border-border hover:bg-muted text-foreground transition-colors cursor-pointer flex items-center gap-1.5"
+					>
+						<FileDown class="w-3.5 h-3.5" />
+						<span>Download Receipt (.json)</span>
+					</button>
+				{/if}
 				<button
 					type="button"
 					onclick={() => (activeReceipt = null)}

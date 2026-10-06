@@ -1,5 +1,9 @@
 {
 	"/": [],
+	"/p": [],
+	"/p/[code]/uploads/[upload_id]/receipt": [
+		"src/routes/p/[code]/uploads/[upload_id]/receipt/+server.ts"
+	],
 	"/p/[code]/upload": [],
 	"/upload": [],
 	"/workspace": []

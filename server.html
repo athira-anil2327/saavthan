@@ -4,31 +4,35 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Vault — Privacy Kiosk Hub & Secure Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0b0f19;
-      --card-bg: #111827;
-      --card-border: #1f2937;
-      --card-hover: #1e293b;
-      --text-main: #f9fafb;
-      --text-muted: #9ca3af;
-      --primary: #3b82f6;
-      --primary-hover: #2563eb;
+      --bg: #f8f9fa;
+      --card-bg: #ffffff;
+      --card-border: #e4e4e7;
+      --card-hover: #f4f4f5;
+      --text-main: #18181b;
+      --text-muted: #71717a;
+      --primary: #FF7675;
+      --primary-hover: #fa6362;
       --emerald: #10b981;
-      --emerald-bg: rgba(16, 185, 129, 0.12);
-      --rose: #f43f5e;
-      --rose-hover: #e11d48;
-      --rose-bg: rgba(244, 63, 94, 0.12);
+      --emerald-bg: rgba(16, 185, 129, 0.1);
+      --rose: #ef4444;
+      --rose-hover: #dc2626;
+      --rose-bg: rgba(239, 68, 68, 0.1);
       --amber: #f59e0b;
-      --amber-bg: rgba(245, 158, 11, 0.12);
+      --amber-bg: rgba(245, 158, 11, 0.1);
       --purple: #8b5cf6;
-      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       background-color: var(--bg);
       color: var(--text-main);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: var(--font-sans);
       min-height: 100vh;
       line-height: 1.5;
     }
@@ -36,7 +40,7 @@
     header {
       background-color: var(--card-bg);
       border-bottom: 1px solid var(--card-border);
-      padding: 1rem 2rem;
+      padding: 0.85rem 2rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -50,17 +54,18 @@
       gap: 0.75rem;
     }
     .logo-badge {
-      background: linear-gradient(135deg, #10b981, #3b82f6);
+      background: var(--primary);
       color: white;
       font-weight: 800;
-      font-size: 1.25rem;
-      padding: 0.35rem 0.75rem;
+      font-size: 1.15rem;
+      padding: 0.25rem 0.65rem;
       border-radius: 8px;
       letter-spacing: 0.05em;
     }
     .logo-title {
       font-size: 1.15rem;
       font-weight: 700;
+      letter-spacing: -0.015em;
     }
     .logo-subtitle {
       font-size: 0.78rem;
@@ -81,6 +86,7 @@
       padding: 0.3rem 0.65rem;
       border-radius: 9999px;
       font-weight: 600;
+      border: 1px solid rgba(16, 185, 129, 0.2);
     }
     .pulse-dot {
       width: 8px;
@@ -110,7 +116,7 @@
       border: 1px solid var(--card-border);
       border-radius: 12px;
       padding: 2.25rem;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
     }
     .auth-header {
       text-align: center;
@@ -119,6 +125,7 @@
     .auth-header h2 {
       font-size: 1.5rem;
       font-weight: 700;
+      letter-spacing: -0.02em;
       margin-bottom: 0.4rem;
     }
     .auth-header p {
@@ -138,8 +145,8 @@
       background: none;
       border: none;
       color: var(--text-muted);
-      font-size: 0.95rem;
-      font-weight: 600;
+      font-size: 0.9rem;
+      font-weight: 500;
       padding: 0.75rem 1.25rem;
       cursor: pointer;
       border-bottom: 2px solid transparent;
@@ -153,8 +160,9 @@
       color: var(--text-main);
     }
     .tab-btn.active {
-      color: var(--emerald);
-      border-bottom-color: var(--emerald);
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+      font-weight: 600;
     }
 
     /* Tab Panes */
@@ -174,9 +182,10 @@
     .panel {
       background-color: var(--card-bg);
       border: 1px solid var(--card-border);
-      border-radius: 10px;
+      border-radius: 12px;
       padding: 1.5rem;
       margin-bottom: 1.5rem;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     }
     .panel-header {
       display: flex;
@@ -189,6 +198,7 @@
     .panel-title {
       font-size: 1.15rem;
       font-weight: 700;
+      letter-spacing: -0.015em;
       display: flex;
       align-items: center;
       gap: 0.5rem;
@@ -196,9 +206,9 @@
 
     /* Node Status Banner */
     .node-banner {
-      background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(59, 130, 246, 0.08) 100%);
-      border: 1px solid rgba(16, 185, 129, 0.25);
-      border-radius: 10px;
+      background: #ffffff;
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
       padding: 1.25rem 1.5rem;
       margin-bottom: 1.75rem;
       display: flex;
@@ -206,6 +216,7 @@
       align-items: center;
       flex-wrap: wrap;
       gap: 1rem;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     }
     .node-meta {
       display: flex;
@@ -227,7 +238,7 @@
       font-size: 0.95rem;
       font-weight: 700;
       font-family: var(--font-mono);
-      color: #e5e7eb;
+      color: var(--text-main);
     }
 
     /* Forms & Controls */
@@ -244,35 +255,37 @@
     }
     .form-group label {
       font-size: 0.8rem;
-      font-weight: 600;
-      color: var(--text-muted);
+      font-weight: 500;
+      color: var(--text-main);
     }
     .form-control {
-      background-color: var(--bg);
+      background-color: #ffffff;
       border: 1px solid var(--card-border);
-      border-radius: 6px;
+      border-radius: 8px;
       padding: 0.65rem 0.85rem;
       color: var(--text-main);
-      font-size: 0.9rem;
+      font-size: 0.875rem;
       outline: none;
-      transition: border-color 0.15s ease;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
     .form-control:focus {
       border-color: var(--primary);
+      box-shadow: 0 0 0 1px var(--primary);
     }
     .btn {
       background-color: var(--primary);
       color: white;
       border: none;
-      border-radius: 6px;
+      border-radius: 8px;
       padding: 0.65rem 1.25rem;
-      font-size: 0.9rem;
-      font-weight: 600;
+      font-size: 0.875rem;
+      font-weight: 500;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 0.5rem;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
       transition: all 0.15s ease;
     }
     .btn:hover {
@@ -291,18 +304,29 @@
       background-color: var(--rose-hover);
     }
     .btn-secondary {
-      background-color: #374151;
+      background-color: #f4f4f5;
+      color: #18181b;
+      border: 1px solid #e4e4e7;
     }
     .btn-secondary:hover {
-      background-color: #4b5563;
+      background-color: #e4e4e7;
+    }
+    .btn-slate {
+      background-color: #f4f4f5;
+      color: #18181b;
+      border: 1px solid #e4e4e7;
+    }
+    .btn-slate:hover {
+      background-color: #e4e4e7;
     }
     .btn-sm {
       padding: 0.35rem 0.75rem;
-      font-size: 0.8rem;
+      font-size: 0.75rem;
+      border-radius: 6px;
     }
     .btn-lg {
-      padding: 1rem 2rem;
-      font-size: 1.1rem;
+      padding: 0.85rem 1.75rem;
+      font-size: 1rem;
     }
 
     /* Tables */
@@ -316,11 +340,12 @@
       border-collapse: collapse;
       text-align: left;
       font-size: 0.875rem;
+      background: #ffffff;
     }
     th {
-      background-color: #1f2937;
+      background-color: #fafafa;
       color: var(--text-muted);
-      font-weight: 600;
+      font-weight: 500;
       padding: 0.75rem 1rem;
       border-bottom: 1px solid var(--card-border);
       text-transform: uppercase;
@@ -330,7 +355,7 @@
     td {
       padding: 0.85rem 1rem;
       border-bottom: 1px solid var(--card-border);
-      color: #e5e7eb;
+      color: var(--text-main);
     }
     tr:last-child td {
       border-bottom: none;
@@ -349,29 +374,33 @@
       font-size: 0.75rem;
       font-weight: 600;
       text-transform: capitalize;
+      border: 1px solid transparent;
     }
-    .badge-emerald { background: var(--emerald-bg); color: var(--emerald); }
-    .badge-rose { background: var(--rose-bg); color: var(--rose); }
-    .badge-amber { background: var(--amber-bg); color: var(--amber); }
-    .badge-blue { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
-    .badge-purple { background: rgba(139, 92, 246, 0.15); color: #c084fc; }
+    .badge-emerald { background: var(--emerald-bg); color: #059669; border-color: rgba(16, 185, 129, 0.2); }
+    .badge-rose { background: var(--rose-bg); color: #dc2626; border-color: rgba(239, 68, 68, 0.2); }
+    .badge-amber { background: var(--amber-bg); color: #d97706; border-color: rgba(245, 158, 11, 0.2); }
+    .badge-blue { background: rgba(59, 130, 246, 0.1); color: #2563eb; border-color: rgba(59, 130, 246, 0.2); }
+    .badge-purple { background: rgba(139, 92, 246, 0.1); color: #7c3aed; border-color: rgba(139, 92, 246, 0.2); }
 
     .code-text {
       font-family: var(--font-mono);
       font-size: 0.8rem;
-      background-color: rgba(0,0,0,0.3);
+      background-color: #f4f4f5;
+      color: #18181b;
       padding: 0.15rem 0.4rem;
       border-radius: 4px;
+      border: 1px solid #e4e4e7;
     }
 
     /* Obliteration Card */
     .obliterate-box {
-      background: linear-gradient(135deg, rgba(244, 63, 94, 0.1) 0%, rgba(17, 24, 39, 1) 100%);
+      background: #ffffff;
       border: 2px solid var(--rose);
       border-radius: 12px;
       padding: 2rem;
       text-align: center;
       margin-top: 1.5rem;
+      box-shadow: 0 1px 3px rgba(239, 68, 68, 0.1);
     }
 
     /* Customer Portal Specific */
@@ -384,9 +413,8 @@
       font-size: 2rem;
       font-weight: 800;
       margin-bottom: 0.5rem;
-      background: linear-gradient(135deg, #10b981, #60a5fa);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      color: #18181b;
+      letter-spacing: -0.025em;
     }
     .drop-hero p {
       color: var(--text-muted);
@@ -394,18 +422,18 @@
     }
 
     .dropzone {
-      border: 2px dashed #374151;
+      border: 2px dashed #e4e4e7;
       border-radius: 12px;
       padding: 3rem 2rem;
       text-align: center;
-      background: rgba(17, 24, 39, 0.6);
+      background: #ffffff;
       cursor: pointer;
       transition: all 0.2s ease;
       margin-bottom: 1.5rem;
     }
     .dropzone:hover, .dropzone.dragover {
-      border-color: var(--emerald);
-      background: rgba(16, 185, 129, 0.05);
+      border-color: var(--primary);
+      background: #FFF1F1;
     }
     .dropzone-icon {
       font-size: 3rem;
@@ -413,35 +441,36 @@
     }
 
     .progress-bar-container {
-      background-color: #1f2937;
+      background-color: #f4f4f5;
       border-radius: 9999px;
-      height: 12px;
+      height: 10px;
       overflow: hidden;
       margin: 1rem 0;
       display: none;
+      border: 1px solid #e4e4e7;
     }
     .progress-bar-fill {
-      background: linear-gradient(90deg, #10b981, #3b82f6);
+      background: var(--primary);
       height: 100%;
       width: 0%;
       transition: width 0.15s ease;
     }
 
     .receipt-card {
-      background: #0f2027;
-      background: linear-gradient(to bottom, #111e2e, #111827);
-      border: 1px solid var(--emerald);
+      background: #ffffff;
+      border: 1px solid #10b981;
       border-radius: 12px;
       padding: 1.75rem;
       margin-top: 1.5rem;
       display: none;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
     }
 
     /* Modal */
     .modal-backdrop {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0, 0, 0, 0.75);
+      background: rgba(0, 0, 0, 0.4);
       backdrop-filter: blur(4px);
       display: none;
       align-items: center;
@@ -452,13 +481,13 @@
       display: flex;
     }
     .modal-box {
-      background: var(--card-bg);
+      background: #ffffff;
       border: 1px solid var(--card-border);
       border-radius: 12px;
       padding: 2rem;
       max-width: 500px;
       width: 90%;
-      box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
     }
 
     /* Toast */
@@ -472,12 +501,12 @@
       z-index: 9999;
     }
     .toast {
-      background-color: var(--card-bg);
+      background-color: #ffffff;
       border: 1px solid var(--card-border);
       color: var(--text-main);
       padding: 0.75rem 1.25rem;
       border-radius: 8px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
       font-size: 0.875rem;
       display: flex;
       align-items: center;
@@ -1587,7 +1616,6 @@
           const actionsCell = isStaged ? `
             <button class="btn btn-emerald btn-sm" onclick="downloadUploadFile('${escapeHtml(u.id)}', '${escapeHtml(u.display_name)}', false)">📥 Download</button>
             <button class="btn btn-slate btn-sm" onclick="downloadUploadFile('${escapeHtml(u.id)}', '${escapeHtml(u.display_name)}', true)">👁️ Preview</button>
-            <button class="btn btn-amber btn-sm" onclick="deliverUploadToWorkspace('${escapeHtml(u.id)}')">💻 Deliver to Kiosk</button>
             <button class="btn btn-rose btn-sm" onclick="purgeSingleUpload('${escapeHtml(u.id)}')">🗑️ Purge</button>
           ` : `<span style="color: var(--text-muted); font-size: 0.8rem;">Staging Purged</span>`;
 

@@ -31,6 +31,7 @@ export interface DropInfo {
 	max_bytes: number;
 	label?: string;
 	status?: string;
+	is_expired?: boolean;
 }
 
 export interface UploadRecord {
@@ -39,7 +40,7 @@ export interface UploadRecord {
 	display_name: string;
 	declared_size: number;
 	total_chunks: number;
-	status: 'receiving' | 'verified' | 'delivered';
+	status: 'receiving' | 'verified' | 'delivered' | 'wiped';
 	tree_hash: string | null;
 	created_at: number;
 	receipt?: {
@@ -425,3 +426,249 @@ export async function uploadFileToDrop(
 		return null;
 	}
 }
+
+/**
+ * List all kiosk sessions
+ */
+export async function listSessions(): Promise<any[]> {
+	await ensureAuthenticated();
+	try {
+		const res = await fetch('/api/v1/sessions', {
+			headers: getAuthHeaders()
+		});
+		if (res.ok) {
+			return await res.json();
+		}
+	} catch (e) {
+		console.warn('[Saavthan API] Failed to list sessions:', e);
+	}
+	return [];
+}
+
+/**
+ * Close a drop
+ */
+export async function closeDrop(code: string): Promise<boolean> {
+	await ensureAuthenticated();
+	try {
+		const res = await fetch(`/api/v1/drops/${code}/close`, {
+			method: 'POST',
+			headers: getAuthHeaders()
+		});
+		return res.ok;
+	} catch (e) {
+		console.error('[Saavthan API] Failed to close drop:', e);
+		return false;
+	}
+}
+
+/**
+ * Trigger immediate OTA update check & install
+ */
+export async function triggerOtaUpdate(): Promise<any> {
+	await ensureAuthenticated();
+	try {
+		const res = await fetch('/api/v1/system/check-update', {
+			method: 'POST',
+			headers: getAuthHeaders()
+		});
+		if (res.ok) {
+			return await res.json();
+		}
+	} catch (e) {
+		console.error('[Saavthan API] OTA update trigger failed:', e);
+	}
+	return null;
+}
+
+/**
+ * Enroll node with central manager
+ */
+export async function enrollNode(managerUrl: string, token: string): Promise<any> {
+	await ensureAuthenticated();
+	try {
+		const res = await fetch('/api/v1/system/enroll', {
+			method: 'POST',
+			headers: getAuthHeaders(),
+			body: JSON.stringify({ manager_url: managerUrl, token })
+		});
+		if (res.ok) {
+			return await res.json();
+		}
+	} catch (e) {
+		console.error('[Saavthan API] Enrollment failed:', e);
+	}
+	return null;
+}
+
+/**
+ * List staff team members
+ */
+export async function listUsers(): Promise<any[]> {
+	await ensureAuthenticated();
+	try {
+		const res = await fetch('/api/v1/users', {
+			headers: getAuthHeaders()
+		});
+		if (res.ok) {
+			return await res.json();
+		}
+	} catch (e) {
+		console.warn('[Saavthan API] Failed to list users:', e);
+	}
+	return [];
+}
+
+/**
+ * Register a new staff operator
+ */
+export async function registerStaff(username: string, password: string): Promise<any> {
+	try {
+		const res = await fetch('/api/v1/auth/register', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ username, password })
+		});
+		if (res.ok) {
+			return await res.json();
+		}
+	} catch (e) {
+		console.error('[Saavthan API] Staff registration failed:', e);
+	}
+	return null;
+}
+
+export interface SessionFile {
+	name: string;
+	size: number;
+	media_type: string;
+	created_at: number;
+	tree_hash?: string;
+	upload_id?: string;
+	status?: string;
+	download_url: string;
+}
+
+/**
+ * Lists decrypted plaintext files present in active workspace session
+ */
+export async function listSessionFiles(sessionId: string): Promise<SessionFile[]> {
+	try {
+		const res = await fetch(`/api/v1/session/${sessionId}/files`);
+		if (res.ok) {
+			return await res.json();
+		}
+	} catch (e) {
+		console.warn('[Saavthan API] Failed to list session files:', e);
+	}
+	return [];
+}
+
+/**
+ * Download decrypted file either from session workspace or on-the-fly decryption streaming
+ */
+export async function downloadDecryptedFile(uploadId: string, filename: string, sessionId?: string): Promise<boolean> {
+	try {
+		// 1. Try session download if session is active
+		if (sessionId) {
+			const sessUrl = `/api/v1/session/${sessionId}/files/${encodeURIComponent(filename)}`;
+			const res = await fetch(sessUrl);
+			if (res.ok) {
+				const blob = await res.blob();
+				const blobUrl = URL.createObjectURL(blob);
+				const a = document.createElement('a');
+				a.href = blobUrl;
+				a.download = filename;
+				document.body.appendChild(a);
+				a.click();
+				document.body.removeChild(a);
+				URL.revokeObjectURL(blobUrl);
+				return true;
+			}
+		}
+
+		// 2. Try on-the-fly streaming endpoint
+		const token = getStoredToken();
+		const headers: Record<string, string> = {};
+		if (token) headers['Authorization'] = `Bearer ${token}`;
+		const dlUrl = `/api/v1/uploads/${uploadId}/download${token ? `?token=${encodeURIComponent(token)}` : ''}`;
+		const dlRes = await fetch(dlUrl, { headers });
+		if (dlRes.ok) {
+			const blob = await dlRes.blob();
+			const blobUrl = URL.createObjectURL(blob);
+			const a = document.createElement('a');
+			a.href = blobUrl;
+			a.download = filename;
+			document.body.appendChild(a);
+			a.click();
+			document.body.removeChild(a);
+			URL.revokeObjectURL(blobUrl);
+			return true;
+		}
+	} catch (e) {
+		console.error('[Saavthan API] Download decrypted file failed:', e);
+	}
+	return false;
+}
+
+/**
+ * Fetch cryptographic receipt for an upload
+ */
+export async function fetchUploadReceipt(uploadId: string, dropCode?: string): Promise<any | null> {
+	try {
+		const res = await fetch(`/api/v1/uploads/${uploadId}/receipt`);
+		if (res.ok) {
+			return await res.json();
+		}
+		if (dropCode) {
+			const fallback = await fetch(`/p/${dropCode}/uploads/${uploadId}/receipt`);
+			if (fallback.ok) {
+				return await fallback.json();
+			}
+		}
+	} catch (e) {
+		console.warn('[Saavthan API] Fetch upload receipt failed:', e);
+	}
+	return null;
+}
+
+/**
+ * Remotely delete a single upload from the drop session (client-triggered crypto-shred)
+ */
+export async function deleteUploadFromDrop(dropCode: string, uploadId: string): Promise<boolean> {
+	try {
+		const res = await fetch(`/p/${dropCode}/uploads/${uploadId}`, {
+			method: 'DELETE'
+		});
+		if (res.ok) return true;
+		const fallback = await fetch(`/p/${dropCode}/uploads/${uploadId}/delete`, {
+			method: 'POST'
+		});
+		return fallback.ok;
+	} catch (e) {
+		console.error('[Saavthan API] Failed to delete upload:', e);
+		return false;
+	}
+}
+
+/**
+ * Remotely delete all uploaded files handed over in this drop session (client-triggered 'Delete Now')
+ */
+export async function deleteAllUploadsFromDrop(dropCode: string): Promise<{ success: boolean; count: number }> {
+	try {
+		const res = await fetch(`/p/${dropCode}/delete-all`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({})
+		});
+		if (res.ok) {
+			const data = await res.json();
+			return { success: true, count: data.count || 0 };
+		}
+	} catch (e) {
+		console.error('[Saavthan API] Failed to delete all uploads:', e);
+	}
+	return { success: false, count: 0 };
+}
+
+

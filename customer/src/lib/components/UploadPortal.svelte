@@ -21,6 +21,8 @@
 		listDrops,
 		createDrop,
 		uploadFileToDrop,
+		deleteUploadFromDrop,
+		deleteAllUploadsFromDrop,
 		type DropInfo
 	} from '#lib/saavthan-api';
 
@@ -31,14 +33,17 @@
 		status: 'selected' | 'uploading' | 'verified' | 'error';
 		error?: string;
 		treeHash?: string;
+		uploadId?: string;
 	}
 
 	let currentDrop = $state<DropInfo | null>(null);
 	let selectedFiles = $state<SelectedFileItem[]>([]);
 	let isDragging = $state(false);
 	let isUploading = $state(false);
+	let isDeleting = $state(false);
 	let fileInputRef: HTMLInputElement | null = null;
 	let dropStatusMessage = $state<string | null>(null);
+	let toastMessage = $state<string | null>(null);
 
 	onMount(async () => {
 		try {
@@ -115,12 +120,46 @@
 		}
 	}
 
-	function removeSelectedFile(id: string) {
+	async function removeSelectedFile(id: string) {
+		const target = selectedFiles.find((f) => f.id === id);
+		if (target && target.uploadId && currentDrop) {
+			try {
+				await deleteUploadFromDrop(currentDrop.drop_code, target.uploadId);
+				showToast(`Permanently deleted ${target.file.name}`);
+			} catch (e) {
+				console.error('Remote delete failed:', e);
+			}
+		}
 		selectedFiles = selectedFiles.filter((f) => f.id !== id);
 	}
 
+	function showToast(msg: string) {
+		toastMessage = msg;
+		setTimeout(() => {
+			if (toastMessage === msg) toastMessage = null;
+		}, 3500);
+	}
+
+	async function handleDeleteAll() {
+		if (isDeleting || isUploading) return;
+		const code = currentDrop?.drop_code || 'LOCAL';
+
+		isDeleting = true;
+		try {
+			// Trigger server-side crypto-shred for all uploads in drop session
+			const result = await deleteAllUploadsFromDrop(code);
+			selectedFiles = [];
+			showToast(result.success ? `Permanently deleted ${result.count} files from server` : 'Files deleted from server');
+		} catch (err) {
+			console.error('Delete now error:', err);
+			showToast('Failed to complete remote deletion');
+		} finally {
+			isDeleting = false;
+		}
+	}
+
 	async function handleUploadAll() {
-		if (selectedFiles.length === 0 || isUploading) return;
+		if (selectedFiles.length === 0 || isUploading || isDeleting) return;
 		if (!currentDrop) {
 			alert('Drop portal channel is initializing. Please try again in a moment.');
 			return;
@@ -147,6 +186,7 @@
 					item.status = 'verified';
 					item.progress = 100;
 					item.treeHash = result.tree_hash;
+					item.uploadId = result.upload_id;
 				} else {
 					item.status = 'error';
 					item.error = 'Upload verification rejected';
@@ -185,7 +225,7 @@
 	<title>Vault — Direct Upload Portal</title>
 </svelte:head>
 
-<div class="space-y-6">
+<div class="space-y-6 max-w-4xl mx-auto">
 	<!-- Hidden File Input -->
 	<input
 		type="file"
@@ -195,22 +235,22 @@
 		class="hidden"
 	/>
 
-	<!-- Header -->
-	<div class="upload-header text-center space-y-1">
-		<div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold mb-1">
-			<Lock class="w-3.5 h-3.5" />
-			<span>Secure Ingestion Session: {currentDrop?.drop_code || 'Active'}</span>
+	<!-- Header (Strict shadcn typography: tracking-tight, muted-foreground, font-semibold) -->
+	<div class="text-center space-y-1.5 pt-2">
+		<div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-primary/20 bg-primary/10 text-primary text-xs font-medium">
+			<Lock class="w-3 h-3" />
+			<span>Drop Code: {currentDrop?.drop_code || 'Active'}</span>
 		</div>
-		<h1 class="text-2xl font-bold tracking-tight text-foreground">
+		<h1 class="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
 			Upload to Vault
 		</h1>
-		<p class="text-xs text-muted-foreground">
-			Files are end-to-end encrypted with AES-256 and transferred directly into the kiosk workspace.
+		<p class="text-sm text-muted-foreground max-w-lg mx-auto">
+			Files are end-to-end encrypted with AES-256 and transferred directly into the secure kiosk workspace.
 		</p>
 	</div>
 
 	<!-- Responsive Grid: 40% Upload Area (Left) & 60% Selected Files Area (Right) -->
-	<div class="grid grid-cols-1 md:grid-cols-5 gap-6 items-stretch">
+	<div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-stretch">
 		<!-- 1. 40% UPLOAD BOX (LEFT) -->
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -219,18 +259,17 @@
 			ondragover={handleDragOver}
 			ondragleave={handleDragLeave}
 			ondrop={handleDrop}
-			class="upload-panel md:col-span-2 w-full h-full min-h-[360px] md:min-h-[420px] rounded-2xl border-2 border-dashed {isDragging ? 'border-primary ring-2 ring-primary/20 scale-[0.99]' : 'border-border hover:border-primary/60'} bg-gradient-to-b from-muted/80 via-muted/40 to-background flex flex-col items-center justify-center p-8 text-center cursor-pointer transition-all shadow-xs select-none"
+			class="md:col-span-2 w-full h-full min-h-[340px] md:min-h-[380px] rounded-xl border-2 border-dashed {isDragging ? 'border-primary ring-2 ring-primary/20 bg-accent' : 'border-border hover:border-primary/50 bg-card'} flex flex-col items-center justify-center p-6 text-center cursor-pointer transition-colors shadow-xs select-none"
 		>
-			<!-- Standard Upload Sign -->
-			<div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-card border border-border flex items-center justify-center text-primary mb-4 shadow-sm transition-transform hover:scale-105">
-				<UploadCloud class="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
+			<div class="w-14 h-14 rounded-xl bg-muted/60 border border-border flex items-center justify-center text-primary mb-3.5 shadow-xs">
+				<UploadCloud class="w-7 h-7 text-primary" />
 			</div>
 
-			<h2 class="text-base sm:text-lg font-bold text-foreground tracking-tight">
+			<h2 class="text-base font-semibold text-foreground tracking-tight">
 				{isDragging ? 'Drop files here' : 'Choose files to upload'}
 			</h2>
-			<p class="text-xs sm:text-sm text-muted-foreground mt-1.5 max-w-[260px] leading-relaxed">
-				Tap here or drag & drop documents, photos, or archives
+			<p class="text-xs text-muted-foreground mt-1 max-w-[240px] leading-relaxed">
+				Drag &amp; drop files here, or browse from device
 			</p>
 			<p class="text-[11px] text-muted-foreground/80 mt-3 font-mono">
 				Max 500 MB per file
@@ -238,18 +277,18 @@
 		</div>
 
 		<!-- 2. 60% SELECTED FILES BOX (RIGHT) -->
-		<div class="upload-panel md:col-span-3 flex flex-col justify-between h-full min-h-[360px] md:min-h-[420px] bg-card border border-border rounded-2xl p-6 sm:p-7 shadow-xs space-y-4">
-			<div class="space-y-4 flex-1 flex flex-col min-h-0">
+		<div class="md:col-span-3 flex flex-col justify-between h-full min-h-[340px] md:min-h-[380px] bg-card border border-border rounded-xl p-5 shadow-xs space-y-3">
+			<div class="space-y-3 flex-1 flex flex-col min-h-0">
 				<!-- Header -->
-				<div class="flex items-center justify-between pb-2 border-b border-border/60">
+				<div class="flex items-center justify-between pb-2 border-b border-border">
 					<h3 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
 						Selected Files ({selectedFiles.length})
 					</h3>
-					{#if selectedFiles.length > 0 && !isUploading}
+					{#if selectedFiles.length > 0 && !isUploading && !isDeleting}
 						<button
 							type="button"
 							onclick={() => (selectedFiles = [])}
-							class="text-xs text-destructive hover:underline cursor-pointer"
+							class="text-xs font-medium text-destructive hover:underline cursor-pointer"
 						>
 							Clear All
 						</button>
@@ -257,34 +296,35 @@
 				</div>
 
 				<!-- Scrollable Selected Files List -->
-				<div class="flex-1 overflow-y-auto max-h-[300px] md:max-h-[340px] pr-1 space-y-2.5">
+				<div class="flex-1 overflow-y-auto max-h-[280px] md:max-h-[300px] pr-1 space-y-2">
 					{#if selectedFiles.length === 0}
-						<div class="h-full min-h-[240px] w-full flex flex-col items-center justify-center text-center p-8 border border-dashed border-border/70 rounded-xl bg-muted/10 text-xs sm:text-sm text-muted-foreground">
-							<UploadCloud class="w-10 h-10 opacity-30 mb-3" />
-							<span class="max-w-[280px] leading-relaxed">No files selected yet. Click or drop files into the upload box on the left.</span>
+						<div class="h-full min-h-[220px] w-full flex flex-col items-center justify-center text-center p-6 border border-dashed border-border rounded-lg bg-muted/30 text-xs text-muted-foreground">
+							<UploadCloud class="w-8 h-8 opacity-40 mb-2" />
+							<span class="max-w-[240px]">No files selected yet. Choose files from the box on the left.</span>
 						</div>
 					{:else}
 						{#each selectedFiles as item}
 							{@const Icon = getFileIcon(item.file.name)}
-							<div class="p-3 sm:p-3.5 rounded-xl border border-border bg-muted/30 shadow-xs flex items-center justify-between gap-3">
+							<div class="p-2.5 sm:p-3 rounded-lg border border-border bg-muted/30 shadow-2xs flex items-center justify-between gap-3 transition-colors hover:bg-muted/50">
 								<div class="flex items-center gap-3 min-w-0">
-									<div class="w-8 h-8 rounded-lg bg-card text-foreground flex items-center justify-center shrink-0 border border-border">
+									<div class="w-8 h-8 rounded-md bg-card text-foreground flex items-center justify-center shrink-0 border border-border">
 										<Icon class="w-4 h-4 text-primary" />
 									</div>
 									<div class="min-w-0">
-										<p class="text-xs sm:text-sm font-medium text-foreground truncate max-w-[220px] sm:max-w-[340px]">
+										<p class="text-xs font-medium text-foreground truncate max-w-[200px] sm:max-w-[320px]">
 											{item.file.name}
 										</p>
-										<div class="flex items-center gap-2 text-[11px] sm:text-xs text-muted-foreground mt-0.5">
+										<div class="flex items-center gap-1.5 text-[11px] text-muted-foreground mt-0.5">
 											<span>{formatBytes(item.file.size)}</span>
+											<span>&bull;</span>
 											{#if item.status === 'verified'}
 												<span class="text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
-													<Check class="w-3.5 h-3.5" />
-													Delivered to Workspace
+													<Check class="w-3 h-3" />
+													Delivered
 												</span>
 											{:else if item.status === 'uploading'}
 												<span class="text-primary font-medium flex items-center gap-1">
-													<RefreshCw class="w-3.5 h-3.5 animate-spin" />
+													<RefreshCw class="w-3 h-3 animate-spin" />
 													{item.progress}%
 												</span>
 											{:else if item.status === 'error'}
@@ -298,17 +338,25 @@
 									</div>
 								</div>
 
-								<div class="flex items-center gap-1.5 shrink-0">
+								<div class="flex items-center gap-1 shrink-0">
 									{#if item.status === 'verified'}
-										<CheckCircle2 class="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-									{:else if !isUploading}
 										<button
 											type="button"
 											onclick={() => removeSelectedFile(item.id)}
-											class="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
-											title="Remove selected file"
+											class="p-1 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
+											title="Delete from server"
 										>
-											<Trash2 class="w-4 h-4" />
+											<Trash2 class="w-3.5 h-3.5 text-destructive/80 hover:text-destructive" />
+										</button>
+										<CheckCircle2 class="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+									{:else if !isUploading && !isDeleting}
+										<button
+											type="button"
+											onclick={() => removeSelectedFile(item.id)}
+											class="p-1 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
+											title="Remove"
+										>
+											<Trash2 class="w-3.5 h-3.5" />
 										</button>
 									{/if}
 								</div>
@@ -320,24 +368,49 @@
 		</div>
 	</div>
 
-	<!-- Centered Upload Files Button Directly Below Both Boxes (320px-380px wide) -->
+	<!-- Single Dynamic Action Button: Upload Now by default -> changes to DELETE NOW once files are uploaded -->
 	<div class="upload-action-btn flex justify-center pt-3 pb-8">
-		<button
-			type="button"
-			onclick={handleUploadAll}
-			disabled={isUploading || selectedFiles.length === 0 || unverifiedCount === 0}
-			class="w-full max-w-[360px] sm:w-[360px] h-12 rounded-xl bg-primary text-primary-foreground font-semibold text-xs sm:text-sm shadow-xs hover:opacity-90 transition-opacity cursor-pointer flex items-center justify-center gap-2.5 disabled:opacity-50"
-		>
-			{#if isUploading}
-				<RefreshCw class="w-4 h-4 animate-spin" />
-				<span>Encrypting & Uploading...</span>
-			{:else if selectedFiles.length > 0 && unverifiedCount === 0}
-				<CheckCircle2 class="w-4 h-4" />
-				<span>All Files Delivered</span>
-			{:else}
-				<UploadCloud class="w-4 h-4" />
-				<span>Upload Files {unverifiedCount > 0 ? `(${unverifiedCount})` : ''}</span>
-			{/if}
-		</button>
+		{#if selectedFiles.length > 0 && unverifiedCount === 0}
+			<!-- Post-upload state: Single DELETE NOW button -->
+			<button
+				type="button"
+				onclick={handleDeleteAll}
+				disabled={isDeleting || isUploading}
+				class="w-full max-w-[340px] sm:w-[340px] h-11 rounded-lg bg-destructive text-destructive-foreground hover:bg-destructive/90 font-medium text-sm shadow-xs transition-colors cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+				title="Remotely delete and obliterate all files handed over to the server in this session"
+			>
+				{#if isDeleting}
+					<RefreshCw class="w-4 h-4 animate-spin" />
+					<span>Deleting Files...</span>
+				{:else}
+					<Trash2 class="w-4 h-4" />
+					<span>DELETE NOW</span>
+				{/if}
+			</button>
+		{:else}
+			<!-- Default / Pre-upload state: Single Upload Now button -->
+			<button
+				type="button"
+				onclick={handleUploadAll}
+				disabled={isUploading || isDeleting || selectedFiles.length === 0}
+				class="w-full max-w-[340px] sm:w-[340px] h-11 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 font-medium text-sm shadow-xs transition-colors cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+			>
+				{#if isUploading}
+					<RefreshCw class="w-4 h-4 animate-spin" />
+					<span>Encrypting & Uploading...</span>
+				{:else}
+					<UploadCloud class="w-4 h-4" />
+					<span>Upload Now {unverifiedCount > 0 ? `(${unverifiedCount})` : ''}</span>
+				{/if}
+			</button>
+		{/if}
 	</div>
+
+	<!-- Toast Notification -->
+	{#if toastMessage}
+		<div class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-card text-foreground border border-border px-4 py-2.5 rounded-lg shadow-md flex items-center gap-2 text-xs font-medium z-50 animate-in fade-in slide-in-from-bottom-2">
+			<Check class="w-4 h-4 text-primary" />
+			<span>{toastMessage}</span>
+		</div>
+	{/if}
 </div>
