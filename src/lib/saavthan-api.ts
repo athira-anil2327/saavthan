@@ -101,65 +101,70 @@ function getAuthHeaders(): HeadersInit {
 }
 
 /**
- * Ensure an authenticated session with the backend.
- * Automatically tries to login or bootstrap a local session if needed.
+ * Check backend bootstrap status
+ */
+export async function getAuthStatus(): Promise<{ bootstrapped: boolean }> {
+	try {
+		const res = await fetch('/api/v1/auth/status');
+		if (res.ok) {
+			return await res.json();
+		}
+	} catch (e) {
+		console.warn('[Saavthan API] Failed to fetch auth status:', e);
+	}
+	return { bootstrapped: false };
+}
+
+/**
+ * Log in staff / operator with provided credentials
+ */
+export async function loginStaff(username: string, password: string): Promise<boolean> {
+	try {
+		const res = await fetch('/api/v1/auth/login', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ username, password })
+		});
+		if (res.ok) {
+			const data = await res.json();
+			setStoredToken(data.access_token);
+			return true;
+		}
+	} catch (e) {
+		console.error('[Saavthan API] Login failed:', e);
+	}
+	return false;
+}
+
+/**
+ * Bootstrap node with first-time operator credentials
+ */
+export async function bootstrapStaff(username: string, password: string): Promise<boolean> {
+	try {
+		const bootRes = await fetch('/api/v1/auth/bootstrap', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ username, password })
+		});
+		if (bootRes.ok) {
+			return await loginStaff(username, password);
+		}
+	} catch (e) {
+		console.error('[Saavthan API] Bootstrap failed:', e);
+	}
+	return false;
+}
+
+/**
+ * Verify if current stored token is valid against backend
  */
 export async function ensureAuthenticated(): Promise<boolean> {
 	try {
-		// Check current token
 		if (getStoredToken()) {
 			const meRes = await fetch('/api/v1/auth/me', {
 				headers: getAuthHeaders()
 			});
 			if (meRes.ok) return true;
-		}
-
-		// Try logging in with default operator / staff credentials
-		const loginRes = await fetch('/api/v1/auth/login', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({
-				username: 'staff1',
-				password: 'StrongPassword123!'
-			})
-		});
-
-		if (loginRes.ok) {
-			const data = await loginRes.json();
-			setStoredToken(data.access_token);
-			return true;
-		}
-
-		// If server is not bootstrapped, attempt bootstrap
-		const statusRes = await fetch('/api/v1/auth/status');
-		if (statusRes.ok) {
-			const statusData = await statusRes.json();
-			if (!statusData.bootstrapped) {
-				const bootRes = await fetch('/api/v1/auth/bootstrap', {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({
-						username: 'staff1',
-						password: 'StrongPassword123!'
-					})
-				});
-				if (bootRes.ok) {
-					// Now login
-					const postBootLogin = await fetch('/api/v1/auth/login', {
-						method: 'POST',
-						headers: { 'Content-Type': 'application/json' },
-						body: JSON.stringify({
-							username: 'staff1',
-							password: 'StrongPassword123!'
-						})
-					});
-					if (postBootLogin.ok) {
-						const loginData = await postBootLogin.json();
-						setStoredToken(loginData.access_token);
-						return true;
-					}
-				}
-			}
 		}
 	} catch (e) {
 		console.warn('[Saavthan API] Auth verification error:', e);

@@ -12,7 +12,7 @@
 </script>
 
 <div class="min-h-screen bg-background text-foreground flex flex-col font-sans antialiased selection:bg-accent selection:text-primary transition-colors duration-200">
-	<!-- Top Navigation Bar - Enforced Globally across Port 5174 -->
+	<!-- Top Navigation Bar -->
 	<AppHeader />
 
 	<!-- Layout Body: Flush Left Sidebar + Main Content Container -->

@@ -119,7 +119,7 @@
 					<span>bash</span>
 					<button
 						type="button"
-						onclick={() => copyCode('git clone https://github.com/athira-anil2327/saavthan.git\ncd saavthan\npython server.py serve', 1)}
+						onclick={() => copyCode('git clone https://github.com/fahimshafeek/Saavthan.git\ncd Saavthan\npython server.py serve', 1)}
 						class="flex items-center gap-1 hover:text-foreground cursor-pointer"
 					>
 						{#if copiedIndex === 1}
@@ -131,8 +131,8 @@
 						{/if}
 					</button>
 				</div>
-				<pre class="overflow-x-auto leading-relaxed">git clone https://github.com/athira-anil2327/saavthan.git
-cd saavthan
+				<pre class="overflow-x-auto leading-relaxed">git clone https://github.com/fahimshafeek/Saavthan.git
+cd Saavthan
 python server.py serve --port 8443</pre>
 			</div>
 		</section>

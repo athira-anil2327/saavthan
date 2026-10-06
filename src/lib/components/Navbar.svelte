@@ -40,7 +40,7 @@
 		<!-- Right: Action Buttons & Theme Switcher -->
 		<div class="flex items-center gap-2 sm:gap-3">
 			<a
-				href="https://github.com/athira-anil2327/saavthan"
+				href="https://github.com/fahimshafeek/Saavthan"
 				target="_blank"
 				rel="noopener noreferrer"
 				class="hidden sm:inline-flex items-center justify-center p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"

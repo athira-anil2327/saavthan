@@ -854,7 +854,7 @@
         <tr>
           <td><strong>${escapeHtml(c.name)}</strong></td>
           <td><span class="code-text">${escapeHtml(c.slug)}</span></td>
-          <td><a href="https://vault.laddu.cc/${escapeHtml(c.slug)}" target="_blank" style="color: #60a5fa; text-decoration: none;">vault.laddu.cc/${escapeHtml(c.slug)} ↗</a></td>
+          <td><a href="/${escapeHtml(c.slug)}" target="_blank" style="color: #60a5fa; text-decoration: none;">/${escapeHtml(c.slug)} ↗</a></td>
           <td>${escapeHtml(c.owner_email)}</td>
           <td>${new Date(c.created_at * 1000).toLocaleDateString()}</td>
         </tr>

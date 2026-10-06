@@ -18,10 +18,13 @@ import io
 import json
 import mimetypes
 import os
+import re
 import secrets
 import shutil
 import sqlite3
+import subprocess
 import sys
+import threading
 import time
 import qrcode
 import qrcode.image.svg
@@ -292,13 +295,101 @@ def execute_wipe_on_boot():
     if pending:
         print(f"[Wipe-on-Boot] Obliterated {len(pending)} un-wiped ephemeral workspaces.")
 
+# --- Cloudflare Tunnel Subprocess Manager ---
+
+class CloudflareTunnelManager:
+    def __init__(self, target_port: int = 8443):
+        self.target_port = target_port
+        self.process: Optional[subprocess.Popen] = None
+        self.tunnel_url: Optional[str] = None
+        self._stop_event = threading.Event()
+
+    def start(self):
+        cloudflared_bin = shutil.which("cloudflared")
+        if not cloudflared_bin:
+            print("[Cloudflare Tunnel] 'cloudflared' binary not found on PATH. Skipping auto-tunnel.")
+            return
+
+        token = os.environ.get("VAULT_TUNNEL_TOKEN") or os.environ.get("CLOUDFLARE_TUNNEL_TOKEN")
+        if token:
+            cmd = [cloudflared_bin, "tunnel", "run", "--token", token]
+        else:
+            cmd = [cloudflared_bin, "tunnel", "--url", f"http://localhost:{self.target_port}"]
+
+        try:
+            self.process = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                bufsize=1
+            )
+
+            url_pattern = re.compile(r"https://[a-zA-Z0-9-]+\.trycloudflare\.com")
+
+            def monitor_output():
+                global CLOUDFLARE_TUNNEL_URL
+                if not self.process or not self.process.stdout:
+                    return
+                for line in iter(self.process.stdout.readline, ""):
+                    if self._stop_event.is_set():
+                        break
+                    match = url_pattern.search(line)
+                    if match and not self.tunnel_url:
+                        self.tunnel_url = match.group(0).rstrip("/")
+                        CLOUDFLARE_TUNNEL_URL = self.tunnel_url
+                        print("\n" + "=" * 60)
+                        print("🚀 LIVE CLOUDFLARE TUNNEL SPUN UP AUTOMATICALLY!")
+                        print(f"🔗 Active Tunnel URL: {self.tunnel_url}")
+                        print("=" * 60 + "\n")
+
+            t = threading.Thread(target=monitor_output, daemon=True)
+            t.start()
+
+            # Wait briefly (up to 6s) for trycloudflare URL detection
+            start_time = time.time()
+            while time.time() - start_time < 6.0:
+                if self.tunnel_url:
+                    break
+                time.sleep(0.15)
+
+        except Exception as e:
+            print(f"[Cloudflare Tunnel] Failed to start cloudflared subprocess: {e}")
+
+    def stop(self):
+        self._stop_event.set()
+        if self.process:
+            print("[Cloudflare Tunnel] Terminating subprocess...")
+            try:
+                self.process.terminate()
+                self.process.wait(timeout=2.5)
+            except Exception:
+                try:
+                    self.process.kill()
+                except Exception:
+                    pass
+            self.process = None
+
+_tunnel_manager: Optional[CloudflareTunnelManager] = None
+
 # --- FastAPI App & Lifespan ---
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    global _tunnel_manager
     init_server_db()
     execute_wipe_on_boot()
+
+    if os.environ.get("VAULT_AUTO_TUNNEL", "1").lower() not in ("0", "false", "no"):
+        port = int(os.environ.get("VAULT_PORT", "8443"))
+        _tunnel_manager = CloudflareTunnelManager(target_port=port)
+        _tunnel_manager.start()
+
     yield
+
+    if _tunnel_manager:
+        _tunnel_manager.stop()
+        _tunnel_manager = None
 
 app = FastAPI(title="Vault Service Provider Node", version="1.0.0-mvp", lifespan=lifespan)
 security = HTTPBearer(auto_error=False)
@@ -556,8 +647,11 @@ async def close_drop(code: str, staff: dict = Depends(require_staff)):
 # --- Public Customer Portal Upload Endpoints ---
 
 @app.get("/upload", response_class=HTMLResponse)
+@app.get("/p", response_class=HTMLResponse)
+@app.get("/p/", response_class=HTMLResponse)
 @app.get("/p/{code}")
 @app.get("/p/{code}/upload")
+@app.get("/{slug}/upload", response_class=HTMLResponse)
 @app.get("/{slug}/d/{code}")
 @app.get("/{slug}/d/{code}/upload")
 async def get_drop_info(request: Request, code: Optional[str] = None, slug: Optional[str] = None):
@@ -758,6 +852,30 @@ async def complete_upload(code: str, upload_id: str, req: CompleteUploadRequest,
         except Exception as e:
             print(f"[Sync] Warning: Manager notarization queued/deferred: {e}")
 
+    # Auto-transfer verified upload directly into the active ephemeral workspace
+    active_sess = conn.execute("SELECT * FROM sessions WHERE status = 'active' ORDER BY created_at DESC LIMIT 1").fetchone()
+    if active_sess:
+        try:
+            ws_path = Path(active_sess["workspace_path"])
+            ws_path.mkdir(parents=True, exist_ok=True)
+            safe_name = Path(upload["display_name"]).name
+            out_file = ws_path / safe_name
+            dek = unb64u(upload["dek_b64"])
+            with open(out_file, "wb") as out_f:
+                for c in chunks:
+                    chunk_file = STAGING_DIR / upload_id / f"{c['idx']}.chunk"
+                    with open(chunk_file, "rb") as cf:
+                        blob = cf.read()
+                    nonce = blob[:12]
+                    ciphertext = blob[12:]
+                    aad = f"{upload_id}:{c['idx']}".encode()
+                    chunk_data = AESGCM(dek).decrypt(nonce, ciphertext, aad)
+                    out_f.write(chunk_data)
+            with conn:
+                conn.execute("UPDATE uploads SET status = 'delivered' WHERE id = ?", (upload_id,))
+        except Exception as e:
+            print(f"[Auto-Deliver] Warning delivering upload {upload_id} to workspace: {e}")
+
     conn.close()
 
     return {
@@ -820,20 +938,17 @@ async def deliver_file_to_workspace(session_id: str, upload_id: str, staff: dict
         raise HTTPException(status_code=404, detail="Active session not found")
 
     upload = conn.execute("SELECT * FROM uploads WHERE id = ? AND status = 'verified'", (upload_id,)).fetchone()
-    if not upload:
+    upload_dir = STAGING_DIR / upload_id
+    if not upload or upload["status"] == "wiped" or not upload["dek_b64"] or not upload_dir.exists() or not any(upload_dir.iterdir()):
         conn.close()
-        raise HTTPException(status_code=404, detail="Verified upload not found")
+        raise HTTPException(status_code=404, detail="Upload staged data has been wiped or purged")
 
     chunks = conn.execute("SELECT idx, sha256 FROM chunks WHERE upload_id = ? ORDER BY idx ASC", (upload_id,)).fetchall()
     dek = unb64u(upload["dek_b64"])
     ws_path = Path(sess["workspace_path"])
 
-    # Reconstruct decrypted file directly into workspace with path traversal protection
-    safe_filename = Path(upload["display_name"]).name
-    out_file = (ws_path / safe_filename).resolve()
-    if not str(out_file).startswith(str(ws_path.resolve())):
-        conn.close()
-        raise HTTPException(status_code=400, detail="Invalid destination file path")
+    # Reconstruct decrypted file directly into workspace
+    out_file = ws_path / upload["display_name"]
     with open(out_file, "wb") as out_f:
         for c in chunks:
             chunk_file = STAGING_DIR / upload_id / f"{c['idx']}.chunk"
@@ -924,6 +1039,8 @@ async def list_uploads(staff: dict = Depends(require_staff)):
     results = []
     for r in rows:
         d = dict(r)
+        upload_dir = STAGING_DIR / d["id"]
+        d["is_staged_available"] = upload_dir.exists() and any(upload_dir.iterdir()) and d["status"] != "wiped"
         if d.get("receipt_json"):
             d["receipt"] = json.loads(d["receipt_json"])
         else:
@@ -932,6 +1049,46 @@ async def list_uploads(staff: dict = Depends(require_staff)):
         results.append(d)
     return results
 
+@app.delete("/api/v1/uploads/{upload_id}")
+@app.post("/api/v1/uploads/{upload_id}/purge")
+async def purge_upload_staging(upload_id: str, staff: dict = Depends(require_staff)):
+    """Wipes staged chunk files for a given upload and crypto-shreds its DEK."""
+    upload_dir = STAGING_DIR / upload_id
+    if upload_dir.exists():
+        shutil.rmtree(upload_dir, ignore_errors=True)
+
+    conn = get_db()
+    with conn:
+        conn.execute("UPDATE uploads SET status = 'wiped', dek_b64 = '' WHERE id = ?", (upload_id,))
+    conn.close()
+
+    return {"status": "purged", "upload_id": upload_id}
+
+@app.post("/api/v1/uploads/purge-expired")
+async def purge_expired_uploads(staff: dict = Depends(require_staff)):
+    """Purges staging files for all uploads belonging to closed or expired drops."""
+    conn = get_db()
+    now = time.time()
+    rows = conn.execute("""
+        SELECT u.id
+        FROM uploads u
+        JOIN drops d ON u.drop_code = d.code
+        WHERE d.expires_at < ? OR d.status = 'closed' OR u.status = 'wiped'
+    """, (now,)).fetchall()
+
+    purged_count = 0
+    with conn:
+        for r in rows:
+            upload_id = r["id"]
+            upload_dir = STAGING_DIR / upload_id
+            if upload_dir.exists():
+                shutil.rmtree(upload_dir, ignore_errors=True)
+                purged_count += 1
+            conn.execute("UPDATE uploads SET status = 'wiped', dek_b64 = '' WHERE id = ?", (upload_id,))
+    conn.close()
+
+    return {"status": "ok", "purged_count": purged_count}
+
 @app.get("/api/v1/uploads/{upload_id}/download")
 async def download_upload_file(
     upload_id: str,
@@ -939,15 +1096,15 @@ async def download_upload_file(
     staff: dict = Depends(require_staff)
 ):
     """
-    Decrypts verified upload chunks on-the-fly and returns the plaintext file
-    for staff members (e.g. Akshaya center operators) to view, download, or forward.
-    Requires valid staff Bearer token.
+    Decrypts verified upload chunks on-the-fly and returns the plaintext file.
+    Requires valid staff Bearer token and active staged chunks.
     """
     conn = get_db()
     upload = conn.execute("SELECT * FROM uploads WHERE id = ? AND status = 'verified'", (upload_id,)).fetchone()
-    if not upload:
+    upload_dir = STAGING_DIR / upload_id
+    if not upload or upload["status"] == "wiped" or not upload["dek_b64"] or not upload_dir.exists() or not any(upload_dir.iterdir()):
         conn.close()
-        raise HTTPException(status_code=404, detail="Verified upload not found")
+        raise HTTPException(status_code=404, detail="Upload staged data has been wiped or purged")
 
     chunks = conn.execute("SELECT idx, sha256 FROM chunks WHERE upload_id = ? ORDER BY idx ASC", (upload_id,)).fetchall()
     dek = unb64u(upload["dek_b64"])
@@ -1208,7 +1365,7 @@ def cli_enroll(manager_url: str, token: str):
         print("--- AUTO-REGISTRATION SUCCESSFUL ---")
         print(f"Device ID: {data['device_id']}")
         print(f"Assigned Café Slug: {data['cafe_slug']}")
-        print(f"Public Portal Endpoint: https://{VANITY_DOMAIN}/{data['cafe_slug']}")
+        print(f"Public Portal Endpoint: {VANITY_DOMAIN}/{data['cafe_slug']}")
     except Exception as e:
         print(f"Connection error: {e}")
 
@@ -1278,6 +1435,7 @@ def main():
     serve_parser.add_argument("--host", default="0.0.0.0")
     serve_parser.add_argument("--port", type=int, default=8443)
     serve_parser.add_argument("--reload", action="store_true", help="Auto-reload on file changes")
+    serve_parser.add_argument("--no-tunnel", action="store_true", help="Disable automatic Cloudflare Tunnel startup")
 
     # bootstrap
     boot_parser = subparsers.add_parser("bootstrap", help="Create first-time owner account")
@@ -1303,6 +1461,9 @@ def main():
     args = parser.parse_args()
 
     if args.command == "serve":
+        os.environ["VAULT_PORT"] = str(args.port)
+        if args.no_tunnel:
+            os.environ["VAULT_AUTO_TUNNEL"] = "0"
         init_server_db()
         execute_wipe_on_boot()
         uvicorn.run("server:app", host=args.host, port=args.port, reload=args.reload)

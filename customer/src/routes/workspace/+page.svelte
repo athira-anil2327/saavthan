@@ -105,14 +105,14 @@
 	let deliverySuccessMessage = $state<string | null>(null);
 
 	// New Drop Form
-	let newDropLabel = $state('Kiosk Counter Drop');
+	let newDropLabel = $state('');
 	let newDropMaxMb = $state(100);
 	let newDropTtlMinutes = $state(120);
 	let isCreatingDrop = $state(false);
 	let dropCreatedMessage = $state<string | null>(null);
 
 	// Node Enrollment Form
-	let enrollManagerUrl = $state('http://127.0.0.1:8000');
+	let enrollManagerUrl = $state('');
 	let enrollToken = $state('');
 	let isEnrolling = $state(false);
 	let enrollMessage = $state<string | null>(null);
@@ -798,6 +798,7 @@
 											id="droplabel"
 											type="text"
 											bind:value={newDropLabel}
+											placeholder="e.g. Counter Drop"
 											required
 											class="w-full h-9 px-3 rounded-lg text-xs bg-background border border-border text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
 										/>
@@ -939,19 +940,19 @@
 								<div class="space-y-2 text-xs">
 									<div class="flex items-center justify-between gap-2 p-2.5 rounded-lg bg-muted/40 border border-border">
 										<span class="text-muted-foreground shrink-0">Device ID</span>
-										<code class="font-mono text-foreground truncate text-right max-w-[180px] sm:max-w-none">{systemStatus?.device_id || 'Unenrolled (Stand-Alone)'}</code>
+										<code class="font-mono text-foreground truncate text-right max-w-[180px] sm:max-w-none">{systemStatus?.device_id || '—'}</code>
 									</div>
 									<div class="flex items-center justify-between gap-2 p-2.5 rounded-lg bg-muted/40 border border-border">
 										<span class="text-muted-foreground shrink-0">Café Tenant Slug</span>
-										<span class="text-foreground truncate text-right">{systemStatus?.cafe_slug || 'Local'}</span>
+										<span class="text-foreground truncate text-right">{systemStatus?.cafe_slug || '—'}</span>
 									</div>
 									<div class="flex items-center justify-between gap-2 p-2.5 rounded-lg bg-muted/40 border border-border">
 										<span class="text-muted-foreground shrink-0">Active OS Image File</span>
-										<code class="font-mono text-foreground truncate text-right max-w-[180px] sm:max-w-none">{systemStatus?.active_image_file || 'base_image.bin'}</code>
+										<code class="font-mono text-foreground truncate text-right max-w-[180px] sm:max-w-none">{systemStatus?.active_image_file || '—'}</code>
 									</div>
 									<div class="flex items-center justify-between gap-2 p-2.5 rounded-lg bg-muted/40 border border-border">
 										<span class="text-muted-foreground shrink-0">OTA Image Version</span>
-										<span class="text-foreground">{systemStatus?.image_version || '1.0.0'}</span>
+										<span class="text-foreground">{systemStatus?.image_version || '—'}</span>
 									</div>
 								</div>
 							</div>
@@ -987,6 +988,7 @@
 											id="mgrurl"
 											type="text"
 											bind:value={enrollManagerUrl}
+											placeholder="https://manager.example.com"
 											required
 											class="w-full h-9 px-3 rounded-lg text-xs bg-background border border-border text-foreground focus:outline-none"
 										/>

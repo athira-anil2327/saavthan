@@ -37,6 +37,10 @@
 		deliverUpload,
 		uploadFileToDrop,
 		fetchSystemStatus,
+		ensureAuthenticated,
+		getAuthStatus,
+		loginStaff,
+		bootstrapStaff,
 		type SessionInfo,
 		type DropInfo,
 		type UploadRecord,
@@ -66,8 +70,12 @@
 	// UI State
 	let isLoading = $state(true);
 	let isRefreshing = $state(false);
-	let isUploadingUSB = $state(false);
-	let uploadProgress = $state<number | null>(null);
+	let isAuthenticated = $state(true);
+	let authUsername = $state('');
+	let authPassword = $state('');
+	let authError = $state<string | null>(null);
+	let isAuthenticating = $state(false);
+	let isBootstrapped = $state(true);
 	let copiedField = $state<string | null>(null);
 	let showExitConfirmModal = $state(false);
 	let isWiping = $state(false);
@@ -75,11 +83,19 @@
 	let selectedReceipt = $state<UploadRecord | null>(null);
 
 	let pollInterval: ReturnType<typeof setInterval> | null = null;
-	let fileInputRef: HTMLInputElement | null = null;
 
 	async function initWorkspace() {
 		isLoading = true;
 		try {
+			const authed = await ensureAuthenticated();
+			isAuthenticated = authed;
+			if (!authed) {
+				const status = await getAuthStatus();
+				isBootstrapped = status.bootstrapped;
+				isLoading = false;
+				return;
+			}
+
 			// 1. Fetch system status
 			const sys = await fetchSystemStatus();
 			if (sys) {
@@ -112,11 +128,50 @@
 		}
 	}
 
+	async function handleOperatorAuth(e: Event) {
+		e.preventDefault();
+		if (!authUsername || !authPassword) return;
+		isAuthenticating = true;
+		authError = null;
+		try {
+			let success = false;
+			if (!isBootstrapped) {
+				success = await bootstrapStaff(authUsername, authPassword);
+			} else {
+				success = await loginStaff(authUsername, authPassword);
+			}
+			if (success) {
+				isAuthenticated = true;
+				await initWorkspace();
+			} else {
+				authError = isBootstrapped ? 'Invalid operator credentials' : 'Failed to initialize operator credentials';
+			}
+		} catch (e: any) {
+			authError = e.message || 'Authentication error';
+		} finally {
+			isAuthenticating = false;
+		}
+	}
+
 	async function refreshFiles() {
+		if (!isAuthenticated) return;
 		isRefreshing = true;
 		try {
 			const freshUploads = await listUploads();
 			uploads = freshUploads;
+
+			// Auto-deliver any verified upload to this workspace session
+			if (currentSession?.session_id) {
+				for (const u of freshUploads) {
+					if (u.status === 'verified') {
+						try {
+							await deliverUpload(currentSession.session_id, u.id);
+						} catch (e) {
+							// Ignored if already delivered
+						}
+					}
+				}
+			}
 		} catch (err) {
 			console.warn('Error polling uploads:', err);
 		} finally {
@@ -127,18 +182,27 @@
 	let isMounted = $state(false);
 
 	let dropPortalUrl = $derived.by(() => {
-		if (isMounted && typeof window !== 'undefined') {
+		let baseUrl = '';
+		if (currentDrop?.tunnel_url && !currentDrop.tunnel_url.includes('localhost') && currentDrop.tunnel_url.startsWith('http')) {
+			baseUrl = currentDrop.tunnel_url;
+		} else if (isMounted && typeof window !== 'undefined') {
 			const host = window.location.host;
 			const protocol = window.location.protocol;
 			if (currentDrop?.drop_code) {
-				return `${protocol}//${host}/upload?code=${currentDrop.drop_code}`;
+				baseUrl = `${protocol}//${host}/p/${currentDrop.drop_code}/upload`;
+			} else {
+				baseUrl = `${protocol}//${host}/upload`;
 			}
-			return `${protocol}//${host}/upload`;
+		} else if (currentDrop?.drop_code) {
+			baseUrl = `/p/${currentDrop.drop_code}/upload`;
+		} else {
+			baseUrl = '/upload';
 		}
-		if (currentDrop?.drop_code) {
-			return `https://vault.local/upload?code=${currentDrop.drop_code}`;
+
+		if (!baseUrl.endsWith('/upload')) {
+			baseUrl = baseUrl.replace(/\/?$/, '/upload');
 		}
-		return 'https://vault.local/upload';
+		return baseUrl;
 	});
 
 	function downloadQRCode() {
@@ -163,57 +227,6 @@
 			}, 2000);
 		} catch (e) {
 			console.error('Failed to copy to clipboard', e);
-		}
-	}
-
-	async function handleBrowseUSB() {
-		if (fileInputRef) {
-			fileInputRef.click();
-		}
-	}
-
-	async function handleFileSelected(e: Event) {
-		const target = e.target as HTMLInputElement;
-		if (!target.files || target.files.length === 0) return;
-
-		const filesToUpload = Array.from(target.files);
-		isUploadingUSB = true;
-
-		try {
-			let targetDrop = currentDrop;
-			if (!targetDrop) {
-				targetDrop = await createDrop('Secure Workspace Drop');
-				if (targetDrop) currentDrop = targetDrop;
-			}
-
-			if (!targetDrop) {
-				alert('Could not establish secure drop channel. Please check backend connection.');
-				return;
-			}
-
-			for (const file of filesToUpload) {
-				uploadProgress = 10;
-				const uploaded = await uploadFileToDrop(
-					targetDrop.drop_code,
-					file,
-					(pct: number) => {
-						uploadProgress = pct;
-					}
-				);
-
-				if (uploaded && currentSession?.session_id) {
-					await deliverUpload(currentSession.session_id, uploaded.upload_id);
-				}
-			}
-
-			await refreshFiles();
-		} catch (err: any) {
-			console.error('USB Upload error:', err);
-			alert(`Upload error: ${err.message || 'Failed to encrypt and store file'}`);
-		} finally {
-			isUploadingUSB = false;
-			uploadProgress = null;
-			if (fileInputRef) fileInputRef.value = '';
 		}
 	}
 
@@ -244,7 +257,7 @@
 	onMount(() => {
 		isMounted = true;
 		initWorkspace();
-		pollInterval = setInterval(refreshFiles, 4000);
+		pollInterval = setInterval(refreshFiles, 2000);
 	});
 
 	onDestroy(() => {
@@ -328,15 +341,7 @@
 	<title>Vault — Consumer Workspace</title>
 </svelte:head>
 
-<!-- Hidden USB file input -->
-<!-- Hidden USB file input -->
-<input
-	type="file"
-	multiple
-	bind:this={fileInputRef}
-	onchange={handleFileSelected}
-	class="hidden"
-/>
+
 
 <!-- Left Sidebar Navigation -->
 <AppSidebar
@@ -357,7 +362,57 @@
 				</div>
 			{/if}
 
-			{#if activeNav === 'files'}
+			{#if !isAuthenticated}
+				<section class="max-w-md mx-auto my-12 p-6 sm:p-8 rounded-2xl border border-border bg-card shadow-lg text-center space-y-5">
+					<div class="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center mx-auto border border-primary/20">
+						<ShieldCheck class="w-6 h-6" />
+					</div>
+					<div>
+						<h2 class="text-lg sm:text-xl font-bold text-foreground">
+							{isBootstrapped ? 'Kiosk Operator Login' : 'Initial Node Setup'}
+						</h2>
+						<p class="text-xs text-muted-foreground mt-1">
+							{isBootstrapped ? 'Enter staff credentials to unlock this workstation session.' : 'Create initial administrator credentials for this node.'}
+						</p>
+					</div>
+					{#if authError}
+						<div class="p-2.5 rounded-lg bg-destructive/10 text-destructive text-xs border border-destructive/20">
+							{authError}
+						</div>
+					{/if}
+					<form onsubmit={handleOperatorAuth} class="space-y-3.5 text-left">
+						<div>
+							<label for="op-username" class="block text-[11px] font-semibold uppercase text-muted-foreground mb-1">Operator Username</label>
+							<input
+								id="op-username"
+								type="text"
+								bind:value={authUsername}
+								required
+								placeholder="admin"
+								class="w-full px-3 py-2 rounded-lg bg-muted border border-border text-sm text-foreground focus:outline-none focus:border-primary"
+							/>
+						</div>
+						<div>
+							<label for="op-password" class="block text-[11px] font-semibold uppercase text-muted-foreground mb-1">Passkey / Password</label>
+							<input
+								id="op-password"
+								type="password"
+								bind:value={authPassword}
+								required
+								placeholder="••••••••••••"
+								class="w-full px-3 py-2 rounded-lg bg-muted border border-border text-sm text-foreground focus:outline-none focus:border-primary"
+							/>
+						</div>
+						<button
+							type="submit"
+							disabled={isAuthenticating}
+							class="w-full py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold text-xs transition-opacity hover:opacity-90 disabled:opacity-50 cursor-pointer"
+						>
+							{isAuthenticating ? 'Authenticating...' : (isBootstrapped ? 'Unlock Workspace' : 'Initialize Node')}
+						</button>
+					</form>
+				</section>
+			{:else if activeNav === 'files'}
 				<!-- 1. Vault Active Status Banner (Calm Reassurance Status) -->
 				<section class="vault-banner mb-6 sm:mb-8 p-4 sm:p-6 rounded-xl border border-border bg-card shadow-xs transition-colors">
 					<div class="flex items-start justify-between gap-4">
@@ -401,12 +456,43 @@
 
 								<!-- Option 1: Direct Ingestion Link -->
 								<div class="space-y-2 pt-1 sm:pt-2">
-									<span class="text-xs font-semibold text-foreground uppercase tracking-wider block">
-										Option 1: Join via Link
-									</span>
-									<div class="flex items-center gap-2 px-3 sm:px-4 h-11 sm:h-12 rounded-lg bg-muted border border-border text-xs sm:text-sm md:text-base font-mono font-medium text-foreground select-all shadow-inner">
-										<span class="text-primary font-bold shrink-0">https://</span>
-										<span class="truncate">ladduvault/centrallib/vault</span>
+									<div class="flex items-center justify-between">
+										<span class="text-xs font-semibold text-foreground uppercase tracking-wider block">
+											Option 1: Join via Link
+										</span>
+										{#if currentDrop?.drop_code}
+											<span class="text-[11px] font-mono text-muted-foreground">
+												Code: <span class="font-bold text-primary">{currentDrop.drop_code}</span>
+											</span>
+										{/if}
+									</div>
+									<div class="flex items-center gap-2">
+										<div class="flex-1 flex items-center gap-2 px-3 sm:px-4 h-11 sm:h-12 rounded-lg bg-muted border border-border text-xs sm:text-sm font-mono font-medium text-foreground select-all shadow-inner overflow-hidden">
+											<span class="truncate">{dropPortalUrl}</span>
+										</div>
+										<button
+											type="button"
+											onclick={() => copyToClipboard(dropPortalUrl, 'drop-link')}
+											class="h-11 sm:h-12 px-3.5 sm:px-4 rounded-lg bg-card border border-border hover:bg-muted text-foreground flex items-center gap-1.5 text-xs font-medium transition-colors shrink-0 shadow-xs cursor-pointer"
+											title="Copy dynamic ingestion link"
+										>
+											{#if copiedField === 'drop-link'}
+												<Check class="w-4 h-4 text-emerald-500" />
+												<span class="text-emerald-500 font-semibold">Copied</span>
+											{:else}
+												<Copy class="w-4 h-4 text-muted-foreground" />
+												<span>Copy</span>
+											{/if}
+										</button>
+										<a
+											href={dropPortalUrl}
+											target="_blank"
+											rel="noopener noreferrer"
+											class="h-11 sm:h-12 px-3 sm:px-3.5 rounded-lg bg-primary/10 border border-primary/20 hover:bg-primary/20 text-primary flex items-center justify-center transition-colors shrink-0 shadow-xs cursor-pointer"
+											title="Open dynamic upload page in new tab"
+										>
+											<ExternalLink class="w-4 h-4" />
+										</a>
 									</div>
 								</div>
 							</div>
@@ -450,19 +536,11 @@
 									<Folder class="w-5 h-5" />
 								</div>
 								<h4 class="text-sm font-semibold text-foreground mb-1">
-									No files added yet
+									No files received yet
 								</h4>
-								<p class="text-xs text-muted-foreground max-w-sm mx-auto leading-relaxed mb-4">
-									Use any of the methods above (QR code, WhatsApp, Email, Bluetooth, or USB) to add files to this secure session.
+								<p class="text-xs text-muted-foreground max-w-sm mx-auto leading-relaxed">
+									Open the live link or scan the QR code above from any smartphone or computer to upload files directly into this session.
 								</p>
-								<button
-									type="button"
-									onclick={handleBrowseUSB}
-									class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold text-primary-foreground bg-primary hover:opacity-90 shadow-xs transition-all cursor-pointer"
-								>
-									<UploadCloud class="w-3.5 h-3.5" />
-									<span>Upload / Browse Files</span>
-								</button>
 							</div>
 						{:else}
 							<!-- Desktop Table -->

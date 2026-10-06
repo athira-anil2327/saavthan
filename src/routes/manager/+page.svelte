@@ -138,7 +138,7 @@
 			}
 		} catch (err: any) {
 			console.warn('Saavthan backend offline or unreachable:', err);
-			errorStats = 'Saavthan manager API unreachable. Ensure manager.py is running on port 8000.';
+			errorStats = 'Manager API unreachable. Ensure the Central Manager service is running.';
 		} finally {
 			loadingStats = false;
 		}
@@ -585,7 +585,7 @@
 													{c.slug}
 												</td>
 												<td class="py-3 px-4 font-mono text-muted-foreground">
-													vault.laddu.cc/{c.slug}
+													/{c.slug}
 												</td>
 												<td class="py-3 px-4 text-muted-foreground">
 													{c.owner_email}

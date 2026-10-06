@@ -103,7 +103,7 @@
 					<div class="px-3 py-2 border-b border-border">
 						<p class="font-semibold text-foreground">Central Manager</p>
 						<p class="text-muted-foreground font-mono text-[11px] truncate mt-0.5">
-							port 8000
+							Fleet Authority
 						</p>
 					</div>
 					<a
