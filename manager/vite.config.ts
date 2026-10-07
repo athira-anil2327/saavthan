@@ -61,9 +61,24 @@ export default defineConfig({
 				target: managerBackendUrl,
 				changeOrigin: true
 			},
-			// Local Server / Kiosk API: Auth, drops, sessions, file delivery, wipe engine
+			// Central Manager API: Node auto-enrollment
+			'/api/v1/enroll': {
+				target: managerBackendUrl,
+				changeOrigin: true
+			},
+			// Central Manager API: Device heartbeat & update status
+			'/api/v1/devices': {
+				target: managerBackendUrl,
+				changeOrigin: true
+			},
+			// Central Manager API: OTA release artifacts
+			'/api/v1/releases': {
+				target: managerBackendUrl,
+				changeOrigin: true
+			},
+			// All Central Manager API endpoints (Port 8000)
 			'/api/v1': {
-				target: serverBackendUrl,
+				target: managerBackendUrl,
 				changeOrigin: true
 			}
 		}

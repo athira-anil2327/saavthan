@@ -498,6 +498,14 @@
 	}
 
 	onMount(async () => {
+		try {
+			const params = new URLSearchParams(window.location.search);
+			const tab = params.get('tab') || params.get('section');
+			if (tab && ['session', 'staging', 'drops', 'node', 'staff'].includes(tab)) {
+				activeSection = tab as OperatorSection;
+			}
+		} catch (e) {}
+
 		isLoading = true;
 		await loadAllData();
 		isLoading = false;
