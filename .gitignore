@@ -29,6 +29,7 @@ venv/
 data_server/staging/
 data_server/workspaces/
 *.chunk
+data_server/images/update.bin
 
 # OS
 .DS_Store

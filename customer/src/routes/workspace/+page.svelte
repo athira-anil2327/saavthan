@@ -127,9 +127,27 @@
 	let isEnrolling = $state(false);
 	let enrollMessage = $state<string | null>(null);
 
-	// OTA Check
+	// OTA Check & Modal
+	interface OtaModalData {
+		status: 'applied' | 'up_to_date' | 'rejected' | 'failed' | 'error';
+		title: string;
+		description: string;
+		previous_version?: string;
+		new_version?: string;
+		current_image_version?: string;
+		active_image_file?: string;
+		sha256?: string;
+		reason?: string;
+		message?: string;
+		timestamp: string;
+		rawJson?: string;
+	}
+
 	let isCheckingOta = $state(false);
 	let otaStatusMessage = $state<string | null>(null);
+	let activeOtaResult = $state<OtaModalData | null>(null);
+	let lastOtaResult = $state<OtaModalData | null>(null);
+	let showOtaRawJson = $state(false);
 
 	// New Staff Form
 	let newStaffUsername = $state('');
@@ -345,16 +363,96 @@
 		otaStatusMessage = null;
 		try {
 			const res = await triggerOtaUpdate();
+			const timestamp = new Date().toLocaleString();
 			if (res) {
+				const rawStr = JSON.stringify(res, null, 2);
 				if (res.status === 'up_to_date') {
-					otaStatusMessage = `Node is up to date (Image Version: ${res.current_image_version || systemStatus?.image_version}).`;
-				} else if (res.status === 'updated') {
-					otaStatusMessage = `OTA update applied! New Version: ${res.target_version}`;
+					const data: OtaModalData = {
+						status: 'up_to_date',
+						title: 'Node Firmware Up to Date',
+						description: 'Your node is currently operating on the latest signed release image verified by the Central Authority.',
+						current_image_version: res.current_image_version || systemStatus?.image_version || '1.0.0',
+						active_image_file: systemStatus?.active_image_file || 'base_image.bin',
+						timestamp,
+						rawJson: rawStr
+					};
+					activeOtaResult = data;
+					lastOtaResult = data;
+				} else if (res.status === 'applied' || res.status === 'updated') {
+					const data: OtaModalData = {
+						status: 'applied',
+						title: 'OTA Update Applied Successfully',
+						description: 'Cryptographically verified release manifest signature confirmed. Image downloaded, verified via SHA-256, and activated.',
+						previous_version: res.previous_version || systemStatus?.image_version,
+						new_version: res.new_version || res.target_version,
+						active_image_file: res.active_image_file,
+						sha256: res.sha256,
+						timestamp,
+						rawJson: rawStr
+					};
+					activeOtaResult = data;
+					lastOtaResult = data;
+				} else if (res.status === 'rejected') {
+					const data: OtaModalData = {
+						status: 'rejected',
+						title: 'OTA Update Rejected',
+						description: 'The release manifest failed cryptographic signature verification against the Central Manager public key.',
+						reason: res.reason || 'Ed25519 signature mismatch',
+						timestamp,
+						rawJson: rawStr
+					};
+					activeOtaResult = data;
+					lastOtaResult = data;
+				} else if (res.status === 'failed') {
+					const data: OtaModalData = {
+						status: 'failed',
+						title: 'OTA Verification / Download Failed',
+						description: 'The OTA update could not be completed due to an artifact integrity or download failure.',
+						reason: res.reason || 'Integrity verification failed',
+						timestamp,
+						rawJson: rawStr
+					};
+					activeOtaResult = data;
+					lastOtaResult = data;
 				} else {
-					otaStatusMessage = `Update response: ${JSON.stringify(res)}`;
+					const data: OtaModalData = {
+						status: 'error',
+						title: 'OTA Update Status Report',
+						description: res.message || res.detail || 'Central Manager returned an alert notice for this node.',
+						message: res.message || res.detail,
+						reason: res.reason,
+						timestamp,
+						rawJson: rawStr
+					};
+					activeOtaResult = data;
+					lastOtaResult = data;
 				}
+				showOtaRawJson = false;
 				await loadAllData();
+			} else {
+				const data: OtaModalData = {
+					status: 'error',
+					title: 'OTA Check Failed',
+					description: 'Could not contact Central Manager or no response was received.',
+					message: 'Central Manager unreachable or timed out.',
+					timestamp: new Date().toLocaleString()
+				};
+				activeOtaResult = data;
+				lastOtaResult = data;
+				showOtaRawJson = false;
 			}
+		} catch (err: any) {
+			const data: OtaModalData = {
+				status: 'error',
+				title: 'OTA Check Error',
+				description: err?.message || 'An unexpected error occurred while querying updates.',
+				message: String(err),
+				timestamp: new Date().toLocaleString(),
+				rawJson: JSON.stringify(err, null, 2)
+			};
+			activeOtaResult = data;
+			lastOtaResult = data;
+			showOtaRawJson = false;
 		} finally {
 			isCheckingOta = false;
 		}
@@ -1074,18 +1172,24 @@
 								</div>
 							</div>
 
-							<div class="pt-2">
+							<div class="pt-2 flex flex-wrap items-center gap-2">
 								<button
 									type="button"
 									onclick={handleTriggerOta}
 									disabled={isCheckingOta}
-									class="w-full sm:w-auto inline-flex items-center justify-center gap-2 h-9 px-4 rounded-lg text-xs font-semibold border border-border text-foreground hover:bg-muted transition-colors cursor-pointer"
+									class="w-full sm:w-auto inline-flex items-center justify-center gap-2 h-9 px-4 rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-50"
 								>
 									<RefreshCw class="w-3.5 h-3.5 {isCheckingOta ? 'animate-spin' : ''}" />
 									<span>{isCheckingOta ? 'Checking OTA Signatures...' : 'Check & Apply Signed OTA Update'}</span>
 								</button>
-								{#if otaStatusMessage}
-									<p class="text-xs text-primary mt-2">{otaStatusMessage}</p>
+								{#if lastOtaResult}
+									<button
+										type="button"
+										onclick={() => { activeOtaResult = lastOtaResult; showOtaRawJson = false; }}
+										class="inline-flex items-center justify-center gap-1.5 h-9 px-3 rounded-lg text-xs font-medium border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+									>
+										<span>View Last Result Modal</span>
+									</button>
 								{/if}
 							</div>
 						</div>
@@ -1364,6 +1468,172 @@
 					class="h-8 px-4 rounded-lg text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 cursor-pointer"
 				>
 					Close
+				</button>
+			</div>
+		</div>
+	</div>
+{/if}
+
+<!-- ======================================================== -->
+<!-- MODAL: OTA UPDATE RESULT VIEWER                          -->
+<!-- ======================================================== -->
+{#if activeOtaResult}
+	<div
+		class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+		role="dialog"
+		aria-modal="true"
+	>
+		<div class="relative w-full max-w-lg rounded-xl border border-border bg-card p-6 text-card-foreground shadow-2xl space-y-4">
+			<!-- Header following Shadcn DialogHeader & Typography -->
+			<div class="flex items-start justify-between gap-4 pb-3 border-b border-border">
+				<div class="flex flex-col space-y-1.5 text-left">
+					<div class="flex items-center gap-2">
+						{#if activeOtaResult.status === 'applied'}
+							<CheckCircle2 class="w-5 h-5 text-emerald-500 shrink-0" />
+						{:else if activeOtaResult.status === 'up_to_date'}
+							<ShieldCheck class="w-5 h-5 text-primary shrink-0" />
+						{:else if activeOtaResult.status === 'rejected'}
+							<ShieldAlert class="w-5 h-5 text-destructive shrink-0" />
+						{:else}
+							<AlertTriangle class="w-5 h-5 text-amber-500 shrink-0" />
+						{/if}
+						<h3 class="text-lg font-semibold leading-none tracking-tight text-foreground">
+							{activeOtaResult.title}
+						</h3>
+					</div>
+					<p class="text-sm text-muted-foreground">
+						{activeOtaResult.description}
+					</p>
+				</div>
+				<button
+					type="button"
+					onclick={() => (activeOtaResult = null)}
+					class="rounded-sm opacity-70 transition-opacity hover:opacity-100 text-muted-foreground hover:text-foreground cursor-pointer"
+				>
+					<X class="w-4 h-4" />
+					<span class="sr-only">Close</span>
+				</button>
+			</div>
+
+			<!-- Body with Shadcn Typography & Layout -->
+			<div class="space-y-3 py-1">
+				<div class="flex items-center justify-between py-1 border-b border-border/50">
+					<span class="text-xs font-medium text-muted-foreground">Execution Status</span>
+					{#if activeOtaResult.status === 'applied'}
+						<span class="inline-flex items-center rounded-full border border-transparent bg-emerald-500/15 px-2.5 py-0.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+							Update Applied
+						</span>
+					{:else if activeOtaResult.status === 'up_to_date'}
+						<span class="inline-flex items-center rounded-full border border-transparent bg-primary/15 px-2.5 py-0.5 text-xs font-semibold text-primary">
+							Up to Date
+						</span>
+					{:else if activeOtaResult.status === 'rejected'}
+						<span class="inline-flex items-center rounded-full border border-transparent bg-destructive/15 px-2.5 py-0.5 text-xs font-semibold text-destructive">
+							Signature Rejected
+						</span>
+					{:else}
+						<span class="inline-flex items-center rounded-full border border-transparent bg-amber-500/15 px-2.5 py-0.5 text-xs font-semibold text-amber-600 dark:text-amber-400">
+							{activeOtaResult.status.toUpperCase()}
+						</span>
+					{/if}
+				</div>
+
+				{#if activeOtaResult.previous_version || activeOtaResult.new_version}
+					<div class="grid grid-cols-2 gap-3 py-1 border-b border-border/50">
+						<div>
+							<span class="text-xs font-medium text-muted-foreground block">Previous Image</span>
+							<span class="text-sm font-semibold text-foreground">{activeOtaResult.previous_version || '—'}</span>
+						</div>
+						<div>
+							<span class="text-xs font-medium text-muted-foreground block">Target Release</span>
+							<span class="text-sm font-semibold text-emerald-600 dark:text-emerald-400">{activeOtaResult.new_version || '—'}</span>
+						</div>
+					</div>
+				{/if}
+
+				{#if activeOtaResult.current_image_version}
+					<div class="flex items-center justify-between py-1 border-b border-border/50">
+						<span class="text-xs font-medium text-muted-foreground">Active Image Version</span>
+						<span class="text-sm font-semibold text-foreground">{activeOtaResult.current_image_version}</span>
+					</div>
+				{/if}
+
+				{#if activeOtaResult.active_image_file}
+					<div class="flex items-center justify-between py-1 border-b border-border/50">
+						<span class="text-xs font-medium text-muted-foreground">Activated Image Binary</span>
+						<code class="relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-xs font-semibold text-foreground">
+							{activeOtaResult.active_image_file}
+						</code>
+					</div>
+				{/if}
+
+				{#if activeOtaResult.sha256}
+					<div class="py-1 border-b border-border/50 space-y-1">
+						<div class="flex items-center justify-between">
+							<span class="text-xs font-medium text-muted-foreground">Artifact SHA-256 Digest</span>
+							<button
+								type="button"
+								onclick={() => copyText(activeOtaResult?.sha256 || '', 'ota-hash')}
+								class="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1 cursor-pointer"
+							>
+								{#if copiedKey === 'ota-hash'}
+									<Check class="w-3 h-3 text-emerald-500" />
+									<span class="text-emerald-500 text-[11px]">Copied</span>
+								{:else}
+									<Copy class="w-3 h-3" />
+									<span class="text-[11px]">Copy Hash</span>
+								{/if}
+							</button>
+						</div>
+						<div class="rounded-md bg-muted p-2 font-mono text-[11px] text-foreground break-all">
+							{activeOtaResult.sha256}
+						</div>
+					</div>
+				{/if}
+
+				{#if activeOtaResult.reason}
+					<div class="py-1 border-b border-border/50">
+						<span class="text-xs font-medium text-muted-foreground block">Failure Detail</span>
+						<p class="text-sm text-destructive mt-0.5 font-medium">{activeOtaResult.reason}</p>
+					</div>
+				{/if}
+
+				{#if activeOtaResult.message}
+					<div class="py-1 border-b border-border/50">
+						<span class="text-xs font-medium text-muted-foreground block">Manager Notice</span>
+						<p class="text-sm text-foreground mt-0.5">{activeOtaResult.message}</p>
+					</div>
+				{/if}
+
+				<div class="flex items-center justify-between py-1 border-b border-border/50">
+					<span class="text-xs font-medium text-muted-foreground">Timestamp</span>
+					<span class="text-xs font-mono text-muted-foreground">{activeOtaResult.timestamp}</span>
+				</div>
+
+				{#if activeOtaResult.rawJson}
+					<div class="pt-1">
+						<button
+							type="button"
+							onclick={() => (showOtaRawJson = !showOtaRawJson)}
+							class="text-xs font-medium text-muted-foreground hover:text-foreground inline-flex items-center gap-1 cursor-pointer"
+						>
+							<span>{showOtaRawJson ? 'Hide Raw Details' : 'Inspect Raw Response JSON'}</span>
+						</button>
+						{#if showOtaRawJson}
+							<pre class="mt-2 relative rounded-md bg-muted p-3 font-mono text-[11px] text-muted-foreground overflow-x-auto max-h-36 border border-border">{activeOtaResult.rawJson}</pre>
+						{/if}
+					</div>
+				{/if}
+			</div>
+
+			<!-- Footer following Shadcn DialogFooter -->
+			<div class="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 pt-3 border-t border-border">
+				<button
+					type="button"
+					onclick={() => (activeOtaResult = null)}
+					class="inline-flex items-center justify-center rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90 h-9 px-4 transition-opacity cursor-pointer"
+				>
+					Dismiss
 				</button>
 			</div>
 		</div>

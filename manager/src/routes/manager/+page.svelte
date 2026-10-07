@@ -15,7 +15,14 @@
 		ShieldAlert,
 		ShieldCheck,
 		CheckCircle2,
-		Plus
+		Plus,
+		X,
+		Copy,
+		Check,
+		ExternalLink,
+		FileDown,
+		Download,
+		AlertTriangle
 	} from 'lucide-svelte';
 
 	import { page } from '$app/state';
@@ -106,6 +113,22 @@
 	let releaseFileInput = $state<HTMLInputElement | null>(null);
 	let isSubmittingRelease = $state(false);
 	let releaseActionMessage = $state<string | null>(null);
+
+	// OTA Release Modal State
+	let selectedRelease = $state<any | null>(null);
+	let copiedReleaseKey = $state<string | null>(null);
+	let showReleaseRawJson = $state(false);
+
+	function openReleaseModal(rel: any) {
+		selectedRelease = rel;
+		showReleaseRawJson = false;
+	}
+
+	function copyReleaseText(text: string, key: string) {
+		navigator.clipboard.writeText(text);
+		copiedReleaseKey = key;
+		setTimeout(() => (copiedReleaseKey = null), 2000);
+	}
 
 	// Form: Verify Tree Hash
 	let verifyHashInput = $state('');
@@ -241,9 +264,14 @@
 				body: formData
 			});
 			if (res.ok) {
-				releaseActionMessage = `Release ${releaseVersion} signed and published successfully!`;
+				const publishedVer = releaseVersion;
+				releaseActionMessage = `Release ${publishedVer} signed and published successfully!`;
 				if (releaseFileInput) releaseFileInput.value = '';
 				await fetchManagerData();
+				const target = releases.find((r) => r.version === publishedVer);
+				if (target) {
+					openReleaseModal(target);
+				}
 			} else {
 				const err = await res.json().catch(() => ({}));
 				releaseActionMessage = `Error: ${err.detail || 'Failed to upload release'}`;
@@ -826,9 +854,15 @@
 									</thead>
 									<tbody class="divide-y divide-border">
 										{#each releases as r}
-											<tr class="hover:bg-muted/40 transition-colors">
+											<tr
+												onclick={() => openReleaseModal(r)}
+												class="hover:bg-muted/60 transition-colors cursor-pointer group"
+											>
 												<td class="py-3 px-4 font-bold text-foreground">
-													{r.version}
+													<div class="flex items-center gap-1.5">
+														<span>{r.version}</span>
+														<ExternalLink class="w-3 h-3 text-muted-foreground opacity-40 group-hover:opacity-100 group-hover:text-primary transition-all" />
+													</div>
 												</td>
 												<td class="py-3 px-4">
 													<span class="px-2 py-0.5 rounded-md text-[10px] font-medium {r.severity === 'critical' ? 'bg-destructive/10 text-destructive border border-destructive/20' : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'}">
@@ -839,10 +873,20 @@
 													Artifacts: {r.manifest?.artifacts?.length || 0}
 												</td>
 												<td class="py-3 px-4 font-mono text-muted-foreground">
-													{new Date(r.published_at * 1000).toLocaleString()}
+													<div class="flex items-center justify-between">
+														<span>{new Date(r.published_at * 1000).toLocaleString()}</span>
+														<span class="text-[11px] text-primary opacity-0 group-hover:opacity-100 transition-opacity font-medium ml-2">Inspect &rarr;</span>
+													</div>
 												</td>
 											</tr>
 										{/each}
+										{#if releases.length === 0}
+											<tr>
+												<td colspan="4" class="py-8 text-center text-xs text-muted-foreground">
+													No signed OTA releases published yet. Use the form above to sign and publish an update.
+												</td>
+											</tr>
+										{/if}
 									</tbody>
 								</table>
 							</div>
@@ -945,3 +989,179 @@
 		</main>
 	</div>
 </div>
+
+<!-- ======================================================== -->
+<!-- MODAL: OTA RELEASE MANIFEST & DETAILS                    -->
+<!-- ======================================================== -->
+{#if selectedRelease}
+	<div
+		class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+		role="dialog"
+		aria-modal="true"
+	>
+		<div class="relative w-full max-w-lg rounded-xl border border-border bg-card p-6 text-card-foreground shadow-2xl space-y-4">
+			<!-- Header following Shadcn DialogHeader & Typography -->
+			<div class="flex items-start justify-between gap-4 pb-3 border-b border-border">
+				<div class="flex flex-col space-y-1.5 text-left">
+					<div class="flex items-center gap-2">
+						<Radio class="w-5 h-5 text-primary shrink-0" />
+						<h3 class="text-lg font-semibold leading-none tracking-tight text-foreground">
+							Signed OTA Release — {selectedRelease.version}
+						</h3>
+					</div>
+					<p class="text-sm text-muted-foreground">
+						Cryptographically notarized software update package registered on Central Authority.
+					</p>
+				</div>
+				<button
+					type="button"
+					onclick={() => (selectedRelease = null)}
+					class="rounded-sm opacity-70 transition-opacity hover:opacity-100 text-muted-foreground hover:text-foreground cursor-pointer"
+				>
+					<X class="w-4 h-4" />
+					<span class="sr-only">Close</span>
+				</button>
+			</div>
+
+			<!-- Body with Shadcn Typography & Layout -->
+			<div class="space-y-3 py-1 max-h-[60vh] overflow-y-auto">
+				<div class="flex items-center justify-between py-1 border-b border-border/50">
+					<span class="text-xs font-medium text-muted-foreground">Release Version</span>
+					<span class="text-sm font-semibold text-foreground">{selectedRelease.version}</span>
+				</div>
+
+				<div class="flex items-center justify-between py-1 border-b border-border/50">
+					<span class="text-xs font-medium text-muted-foreground">Severity Level</span>
+					<span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold {selectedRelease.severity === 'critical' ? 'border-transparent bg-destructive/15 text-destructive' : 'border-transparent bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'}">
+						{selectedRelease.severity}
+					</span>
+				</div>
+
+				<div class="flex items-center justify-between py-1 border-b border-border/50">
+					<span class="text-xs font-medium text-muted-foreground">Published Timestamp</span>
+					<span class="text-xs font-mono text-muted-foreground">
+						{new Date(selectedRelease.published_at * 1000).toLocaleString()}
+					</span>
+				</div>
+
+				<!-- Manifest Artifacts -->
+				{#if selectedRelease.manifest?.artifacts && selectedRelease.manifest.artifacts.length > 0}
+					<div class="py-1 border-b border-border/50 space-y-2">
+						<span class="text-xs font-medium text-muted-foreground block">Packaged Image Artifacts</span>
+						{#each selectedRelease.manifest.artifacts as art}
+							<div class="rounded-lg bg-muted/50 p-3 border border-border space-y-2 text-xs">
+								<div class="flex items-center justify-between">
+									<span class="font-semibold text-foreground text-sm">{art.name}</span>
+									<span class="text-[11px] font-mono text-muted-foreground">{art.size ? (art.size / 1024).toFixed(1) + ' KB' : 'Binary'}</span>
+								</div>
+								{#if art.sha256}
+									<div class="space-y-1">
+										<div class="flex items-center justify-between">
+											<span class="text-[11px] text-muted-foreground">SHA-256 Digest:</span>
+											<button
+												type="button"
+												onclick={() => copyReleaseText(art.sha256, `art-${art.name}`)}
+												class="text-[11px] text-muted-foreground hover:text-foreground inline-flex items-center gap-1 cursor-pointer"
+											>
+												{#if copiedReleaseKey === `art-${art.name}`}
+													<Check class="w-3 h-3 text-emerald-500" />
+													<span class="text-emerald-500">Copied</span>
+												{:else}
+													<Copy class="w-3 h-3" />
+													<span>Copy</span>
+												{/if}
+											</button>
+										</div>
+										<code class="block font-mono text-[10px] text-foreground bg-muted p-2 rounded break-all border border-border/60">
+											{art.sha256}
+										</code>
+									</div>
+								{/if}
+								{#if art.url}
+									<div class="pt-1 flex items-center justify-between">
+										<a
+											href={art.url}
+											download
+											class="text-xs text-primary hover:underline inline-flex items-center gap-1 font-medium"
+										>
+											<Download class="w-3 h-3" />
+											<span>Download Image Binary</span>
+										</a>
+										<code class="font-mono text-[10px] text-muted-foreground">{art.url}</code>
+									</div>
+								{/if}
+							</div>
+						{/each}
+					</div>
+				{/if}
+
+				<!-- Manifest Ed25519 Signature -->
+				{#if selectedRelease.manifest?.signature}
+					<div class="py-1 border-b border-border/50 space-y-1">
+						<div class="flex items-center justify-between">
+							<span class="text-xs font-medium text-muted-foreground">Central Authority Ed25519 Signature</span>
+							<button
+								type="button"
+								onclick={() => copyReleaseText(selectedRelease.manifest.signature, 'rel-sig')}
+								class="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1 cursor-pointer"
+							>
+								{#if copiedReleaseKey === 'rel-sig'}
+									<Check class="w-3 h-3 text-emerald-500" />
+									<span class="text-emerald-500 text-[11px]">Copied</span>
+								{:else}
+									<Copy class="w-3 h-3" />
+									<span class="text-[11px]">Copy Signature</span>
+								{/if}
+							</button>
+						</div>
+						<code class="block font-mono text-[10px] text-foreground bg-muted p-2 rounded break-all border border-border/60">
+							{selectedRelease.manifest.signature}
+						</code>
+					</div>
+				{/if}
+
+				<!-- Collapsible Raw JSON -->
+				<div class="pt-1">
+					<button
+						type="button"
+						onclick={() => (showReleaseRawJson = !showReleaseRawJson)}
+						class="text-xs font-medium text-muted-foreground hover:text-foreground inline-flex items-center gap-1 cursor-pointer"
+					>
+						<span>{showReleaseRawJson ? 'Hide Signed Manifest' : 'Inspect Signed Manifest JSON'}</span>
+					</button>
+					{#if showReleaseRawJson}
+						<pre class="mt-2 relative rounded-md bg-muted p-3 font-mono text-[11px] text-muted-foreground overflow-x-auto max-h-36 border border-border">{JSON.stringify(selectedRelease.manifest || selectedRelease, null, 2)}</pre>
+					{/if}
+				</div>
+			</div>
+
+			<!-- Footer following Shadcn DialogFooter -->
+			<div class="flex items-center justify-end gap-2 pt-3 border-t border-border">
+				<button
+					type="button"
+					onclick={() => {
+						const jsonStr = JSON.stringify(selectedRelease.manifest || selectedRelease, null, 2);
+						const blob = new Blob([jsonStr], { type: 'application/json' });
+						const url = URL.createObjectURL(blob);
+						const a = document.createElement('a');
+						a.href = url;
+						a.download = `release-${selectedRelease.version}.json`;
+						a.click();
+						URL.revokeObjectURL(url);
+					}}
+					class="inline-flex items-center justify-center rounded-lg text-xs font-medium border border-border hover:bg-muted text-foreground h-9 px-3 transition-colors cursor-pointer gap-1.5"
+				>
+					<FileDown class="w-3.5 h-3.5" />
+					<span>Download Manifest</span>
+				</button>
+				<button
+					type="button"
+					onclick={() => (selectedRelease = null)}
+					class="inline-flex items-center justify-center rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90 h-9 px-4 transition-opacity cursor-pointer"
+				>
+					Close
+				</button>
+			</div>
+		</div>
+	</div>
+{/if}
