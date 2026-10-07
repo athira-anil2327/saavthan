@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { LogOut, ArrowLeftRight, ArrowLeft, X } from 'lucide-svelte';
+	import { LogOut, ArrowLeft, X } from 'lucide-svelte';
 	import { mobileNav } from '$lib/nav.svelte';
 
 	export interface SidebarItem {
@@ -105,29 +105,9 @@
 			</nav>
 		</div>
 
-		<!-- Footer: Mode Switch & Exit -->
-		<div class="pt-3 border-t border-border space-y-1.5">
-			{#if page.url.pathname === '/workspace'}
-				<a
-					href="/"
-					onclick={handleClose}
-					class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-				>
-					<ArrowLeftRight class="w-3.5 h-3.5" />
-					<span>Customer Ingestion Hub</span>
-				</a>
-			{:else}
-				<a
-					href="/workspace"
-					onclick={handleClose}
-					class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-				>
-					<ArrowLeftRight class="w-3.5 h-3.5" />
-					<span>Operator Console</span>
-				</a>
-			{/if}
-
-			{#if onExit}
+		<!-- Footer: Exit -->
+		{#if onExit}
+			<div class="pt-3 border-t border-border space-y-1.5">
 				<button
 					type="button"
 					onclick={() => {
@@ -139,8 +119,8 @@
 					<LogOut class="w-3.5 h-3.5" />
 					<span>Exit & Wipe Session</span>
 				</button>
-			{/if}
-		</div>
+			</div>
+		{/if}
 	</div>
 {/if}
 
@@ -176,27 +156,9 @@
 		</nav>
 	</div>
 
-	<!-- Footer: Switch Workspace Mode + Exit Session -->
-	<div class="pt-3 border-t border-border space-y-1.5">
-		{#if page.url.pathname === '/workspace'}
-			<a
-				href="/"
-				class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-			>
-				<ArrowLeftRight class="w-3.5 h-3.5" />
-				<span>Customer Ingestion Hub</span>
-			</a>
-		{:else}
-			<a
-				href="/workspace"
-				class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-			>
-				<ArrowLeftRight class="w-3.5 h-3.5" />
-				<span>Operator Console</span>
-			</a>
-		{/if}
-
-		{#if onExit}
+	<!-- Footer: Exit Session -->
+	{#if onExit}
+		<div class="pt-3 border-t border-border space-y-1.5">
 			<button
 				type="button"
 				onclick={onExit}
@@ -205,7 +167,7 @@
 				<LogOut class="w-3.5 h-3.5" />
 				<span>Exit & Wipe Session</span>
 			</button>
-		{/if}
-	</div>
+		</div>
+	{/if}
 </aside>
 

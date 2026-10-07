@@ -64,26 +64,6 @@ export default defineConfig({
 			'/api/v1': {
 				target: serverBackendUrl,
 				changeOrigin: true
-			},
-			// Customer Drop Portal: Upload chunks, complete, delete, and notarized receipts
-			'/p': {
-				target: serverBackendUrl,
-				changeOrigin: true,
-				bypass: (req) => {
-					// When a browser requests an HTML document for navigation,
-					// return the URL so SvelteKit renders the interactive Svelte UI.
-					const accept = req.headers.accept || '';
-					if (
-						req.method === 'GET' &&
-						accept.includes('text/html') &&
-						!req.url?.includes('/receipt') &&
-						!req.url?.includes('/qr')
-					) {
-						return req.url;
-					}
-					// Forward binary chunk uploads, completion commits, and API calls to backend server.py
-					return null;
-				}
 			}
 		}
 	}

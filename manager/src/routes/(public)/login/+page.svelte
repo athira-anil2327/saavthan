@@ -31,12 +31,7 @@
 
 			const success = await loginStaff(email, password);
 			if (success) {
-				const role = getStoredRole();
-				if (role === 'operator' || role === 'staff' || email.toLowerCase().includes('operator')) {
-					goto('/workspace');
-				} else {
-					goto('/manager');
-				}
+				goto('/manager');
 			} else {
 				errorMessage = 'Invalid credentials or unable to reach node authentication service.';
 			}
