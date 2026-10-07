@@ -460,57 +460,7 @@
 				</div>
 			{/if}
 
-			{#if !isAuthenticated}
-				<section class="max-w-md mx-auto my-12 p-6 sm:p-8 rounded-2xl border border-border bg-card shadow-lg text-center space-y-5">
-					<div class="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center mx-auto border border-primary/20">
-						<ShieldCheck class="w-6 h-6" />
-					</div>
-					<div>
-						<h2 class="text-lg sm:text-xl font-bold text-foreground">
-							{isBootstrapped ? 'Kiosk Operator Login' : 'Initial Node Setup'}
-						</h2>
-						<p class="text-xs text-muted-foreground mt-1">
-							{isBootstrapped ? 'Enter staff credentials to unlock this workstation session.' : 'Create initial administrator credentials for this node.'}
-						</p>
-					</div>
-					{#if authError}
-						<div class="p-2.5 rounded-lg bg-destructive/10 text-destructive text-xs border border-destructive/20">
-							{authError}
-						</div>
-					{/if}
-					<form onsubmit={handleOperatorAuth} class="space-y-3.5 text-left">
-						<div>
-							<label for="op-username" class="block text-[11px] font-semibold uppercase text-muted-foreground mb-1">Operator Username</label>
-							<input
-								id="op-username"
-								type="text"
-								bind:value={authUsername}
-								required
-								placeholder="admin"
-								class="w-full px-3 py-2 rounded-lg bg-muted border border-border text-sm text-foreground focus:outline-none focus:border-primary"
-							/>
-						</div>
-						<div>
-							<label for="op-password" class="block text-[11px] font-semibold uppercase text-muted-foreground mb-1">Passkey / Password</label>
-							<input
-								id="op-password"
-								type="password"
-								bind:value={authPassword}
-								required
-								placeholder="••••••••••••"
-								class="w-full px-3 py-2 rounded-lg bg-muted border border-border text-sm text-foreground focus:outline-none focus:border-primary"
-							/>
-						</div>
-						<button
-							type="submit"
-							disabled={isAuthenticating}
-							class="w-full py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold text-xs transition-opacity hover:opacity-90 disabled:opacity-50 cursor-pointer"
-						>
-							{isAuthenticating ? 'Authenticating...' : (isBootstrapped ? 'Unlock Workspace' : 'Initialize Node')}
-						</button>
-					</form>
-				</section>
-			{:else if activeNav === 'files'}
+			{#if activeNav == 'files'}
 				{#if !currentSession}
 					<section class="mb-6 sm:mb-8 p-6 sm:p-10 rounded-2xl border border-border bg-card shadow-xs text-center space-y-4">
 						<div class="w-12 h-12 rounded-xl bg-destructive/10 text-destructive flex items-center justify-center mx-auto border border-destructive/20 shadow-xs">
@@ -1222,3 +1172,4 @@
 		</div>
 	</div>
 {/if}
+
