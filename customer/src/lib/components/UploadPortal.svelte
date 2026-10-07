@@ -49,27 +49,53 @@
 		try {
 			// Find drop code from path parameter (/p/[code]/upload) or query param (?code=...)
 			const codeParam = page.params?.code || page.url.searchParams.get('code');
-			const drops = await listDrops();
-			if (codeParam) {
-				currentDrop = drops.find((d) => d.drop_code === codeParam) || null;
-				if (!currentDrop) {
-					// Fallback: construct drop object directly from path code
+			const targetCode = codeParam || 'LOCAL';
+
+			// First try public drop metadata endpoint (zero authentication required)
+			try {
+				const publicRes = await fetch(`/p/${targetCode}`, {
+					headers: { 'Accept': 'application/json' }
+				});
+				if (publicRes.ok) {
+					const data = await publicRes.json();
 					currentDrop = {
-						drop_code: codeParam,
-						portal_url: `/p/${codeParam}/upload`,
-						vanity_url: `/p/${codeParam}/upload`,
-						tunnel_url: `/p/${codeParam}/upload`,
-						local_portal_url: `/p/${codeParam}/upload`,
-						expires_at: Date.now() + 3600000,
-						max_bytes: 500 * 1024 * 1024
+						drop_code: data.code,
+						portal_url: `/p/${data.code}/upload`,
+						vanity_url: `/p/${data.code}/upload`,
+						tunnel_url: `/p/${data.code}/upload`,
+						local_portal_url: `/p/${data.code}/upload`,
+						expires_at: (data.expires_at || 0) * 1000,
+						max_bytes: data.max_bytes || 500 * 1024 * 1024,
+						label: data.label
 					};
 				}
+			} catch (e) {
+				console.warn('Public drop resolution error:', e);
 			}
-			if (!currentDrop && drops.length > 0) {
-				currentDrop = drops[0];
-			}
+
+			// If public endpoint didn't set it, try staff listDrops (if operator session)
 			if (!currentDrop) {
-				currentDrop = await createDrop('Customer Portal Drop');
+				const drops = await listDrops();
+				if (codeParam) {
+					currentDrop = drops.find((d) => d.drop_code === codeParam) || null;
+				}
+				if (!currentDrop && drops.length > 0) {
+					currentDrop = drops[0];
+				}
+			}
+
+			// Safe fallback: construct valid drop code
+			if (!currentDrop) {
+				const fallbackCode = codeParam || 'LOCAL';
+				currentDrop = {
+					drop_code: fallbackCode,
+					portal_url: `/p/${fallbackCode}/upload`,
+					vanity_url: `/p/${fallbackCode}/upload`,
+					tunnel_url: `/p/${fallbackCode}/upload`,
+					local_portal_url: `/p/${fallbackCode}/upload`,
+					expires_at: Date.now() + 3600000,
+					max_bytes: 500 * 1024 * 1024
+				};
 			}
 		} catch (err) {
 			console.error('Failed to resolve drop channel:', err);

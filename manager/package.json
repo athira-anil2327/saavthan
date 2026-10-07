@@ -1,0 +1,36 @@
+{
+	"name": "vault-download",
+	"version": "1.0.0",
+	"private": true,
+	"type": "module",
+	"imports": {
+		"#lib": "./src/lib",
+		"#lib/*": "./src/lib/*"
+	},
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "vite preview",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json"
+	},
+	"devDependencies": {
+		"@sveltejs/adapter-auto": "latest",
+		"@sveltejs/kit": "latest",
+		"@sveltejs/vite-plugin-svelte": "latest",
+		"@tailwindcss/vite": "latest",
+		"clsx": "latest",
+		"lucide-svelte": "latest",
+		"svelte": "latest",
+		"svelte-check": "latest",
+		"tailwind-merge": "latest",
+		"tailwindcss": "latest",
+		"typescript": "latest",
+		"vite": "latest"
+	},
+	"dependencies": {
+		"@types/qrcode": "^1.5.6",
+		"gsap": "^3.15.0",
+		"qrcode": "^1.5.4",
+		"tailwind-variants": "^3.3.1"
+	}
+}

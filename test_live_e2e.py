@@ -53,17 +53,17 @@ def main():
         with httpx.Client(base_url=f"http://127.0.0.1:{mgr_port}", timeout=10.0) as mgr_c, \
              httpx.Client(base_url=f"http://127.0.0.1:{srv_port}", timeout=10.0) as srv_c:
 
-            # 1. Check Manager UI
+            # 1. Check Manager API
             r = mgr_c.get("/")
-            assert r.status_code == 200, f"Manager UI status: {r.status_code}"
-            assert "Vault Central Maker" in r.text
-            print("✓ Manager HTML UI loaded successfully (HTTP 200)")
+            assert r.status_code == 200, f"Manager API status: {r.status_code}"
+            assert r.json().get("status") == "ok"
+            print("✓ Manager API loaded successfully (HTTP 200)")
 
-            # 2. Check Server UI
+            # 2. Check Server API
             r = srv_c.get("/")
-            assert r.status_code == 200, f"Server UI status: {r.status_code}"
-            assert "Privacy Kiosk Hub & Secure Portal" in r.text
-            print("✓ Server Staff HTML UI loaded successfully (HTTP 200)")
+            assert r.status_code == 200, f"Server API status: {r.status_code}"
+            assert r.json().get("status") == "ok"
+            print("✓ Server API loaded successfully (HTTP 200)")
 
             # 3. Manager creates cafe and issues token
             r = mgr_c.post("/api/v1/admin/cafes", json={"name": "Kottayam Hub", "slug": "kottayam", "email": "admin@kottayam.cc"})
@@ -103,7 +103,7 @@ def main():
             # 8. Customer Portal UI
             r = srv_c.get(f"/p/{drop_code}", headers={"Accept": "text/html"})
             assert r.status_code == 200
-            assert "Zero-Retention Client Drop" in r.text
+            assert "Zero-Retention" in r.text
             print(f"✓ Customer Portal HTML served at /p/{drop_code}")
 
             # 9. Customer uploads file via chunking

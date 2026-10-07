@@ -37,7 +37,7 @@ import httpx
 import uvicorn
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, Query, Request, Response, UploadFile, status
-from fastapi.responses import HTMLResponse, StreamingResponse, FileResponse
+from fastapi.responses import HTMLResponse, StreamingResponse, FileResponse, JSONResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field
 
@@ -677,12 +677,12 @@ async def close_drop(code: str, staff: dict = Depends(require_staff)):
 
 # --- Public Customer Portal Upload Endpoints ---
 
-@app.get("/upload", response_class=HTMLResponse)
-@app.get("/p", response_class=HTMLResponse)
-@app.get("/p/", response_class=HTMLResponse)
+@app.get("/upload")
+@app.get("/p")
+@app.get("/p/")
 @app.get("/p/{code}")
 @app.get("/p/{code}/upload")
-@app.get("/{slug}/upload", response_class=HTMLResponse)
+@app.get("/{slug}/upload")
 @app.get("/{slug}/d/{code}")
 @app.get("/{slug}/d/{code}/upload")
 async def get_drop_info(request: Request, code: Optional[str] = None, slug: Optional[str] = None):
@@ -707,7 +707,7 @@ async def get_drop_info(request: Request, code: Optional[str] = None, slug: Opti
     conn.close()
     if not drop or drop["status"] != "open" or drop["expires_at"] < time.time():
         raise HTTPException(status_code=404, detail="Drop not found or expired")
-    return dict(drop)
+    return JSONResponse(content=dict(drop))
 
 @app.post("/p/{code}/uploads")
 @app.post("/p/{code}/upload/uploads")
@@ -737,7 +737,7 @@ async def init_upload(req: InitUploadRequest, code: Optional[str] = "LOCAL", slu
         raise HTTPException(status_code=400, detail="File size exceeds drop limit")
 
     upload_id = str(uuid4())
-    total_chunks = (req.size + req.chunk_size - 1) // req.chunk_size
+    total_chunks = max(1, (req.size + req.chunk_size - 1) // req.chunk_size)
     dek = os.urandom(32)  # Per-upload Data Encryption Key for AES-256-GCM at rest
 
     upload_dir = STAGING_DIR / upload_id

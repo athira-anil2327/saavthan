@@ -392,7 +392,8 @@ export async function uploadFileToDrop(
 			});
 
 			if (!chunkRes.ok) {
-				throw new Error(`Chunk ${idx} upload failed`);
+				const errDetail = await chunkRes.text().catch(() => '');
+				throw new Error(`Chunk ${idx} upload failed (${chunkRes.status}): ${errDetail || chunkRes.statusText}`);
 			}
 
 			if (onProgress) {
@@ -412,7 +413,8 @@ export async function uploadFileToDrop(
 		});
 
 		if (!completeRes.ok) {
-			throw new Error(`Complete upload verification failed`);
+			const errDetail = await completeRes.text().catch(() => '');
+			throw new Error(`Complete upload verification failed (${completeRes.status}): ${errDetail || completeRes.statusText}`);
 		}
 
 		const completeData = await completeRes.json();

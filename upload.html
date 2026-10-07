@@ -962,7 +962,8 @@
         });
 
         if (!putRes.ok) {
-          throw new Error(`Chunk ${idx} upload failed (${putRes.status})`);
+          const errBody = await putRes.text().catch(() => '');
+          throw new Error(`Chunk ${idx} upload failed (${putRes.status}): ${errBody || putRes.statusText}`);
         }
 
         item.progress = Math.round(((idx + 1) / totalChunks) * 85);
@@ -981,7 +982,8 @@
       });
 
       if (!compRes.ok) {
-        throw new Error(`Completion failed (${compRes.status})`);
+        const errBody = await compRes.text().catch(() => '');
+        throw new Error(`Completion failed (${compRes.status}): ${errBody || compRes.statusText}`);
       }
 
       item.status = 'verified';
