@@ -18,6 +18,20 @@ import { sveltekit } from '@sveltejs/kit/vite';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vite';
 
+// Target endpoints: accepts SERVERIP (e.g. "1.2.3.4" or "http://1.2.3.4")
+// For manager, targets manager.py on port 8000 and server.py on port 8443
+function resolveBackend(raw: string | undefined, defaultPort: number): string {
+	const val = raw || `127.0.0.1:${defaultPort}`;
+	if (val.startsWith('http://') || val.startsWith('https://')) {
+		return val.includes(':', val.indexOf('://') + 3) ? val : `${val}:${defaultPort}`;
+	}
+	return `http://${val.includes(':') ? val : `${val}:${defaultPort}`}`;
+}
+
+const hostOrIp = process.env.SERVERIP || process.env.SERVER_IP || process.env.MANAGER_IP || process.env.HOST_IP;
+const managerBackendUrl = resolveBackend(process.env.MANAGER_BACKEND_URL || hostOrIp, 8000);
+const serverBackendUrl = resolveBackend(process.env.SERVER_BACKEND_URL || hostOrIp, 8443);
+
 export default defineConfig({
 	plugins: [
 		tailwindcss(),
@@ -37,22 +51,22 @@ export default defineConfig({
 		proxy: {
 			// Central Manager API: Fleet management, tokens, OTA releases
 			'/api/v1/admin': {
-				target: 'http://127.0.0.1:8000',
+				target: managerBackendUrl,
 				changeOrigin: true
 			},
 			// Central Manager API: Transparency notarization and dispute verification
 			'/api/v1/log': {
-				target: 'http://127.0.0.1:8000',
+				target: managerBackendUrl,
 				changeOrigin: true
 			},
 			// Local Server / Kiosk API: Auth, drops, sessions, file delivery, wipe engine
 			'/api/v1': {
-				target: 'http://127.0.0.1:8443',
+				target: serverBackendUrl,
 				changeOrigin: true
 			},
 			// Customer Drop Portal: Upload chunks, complete, delete, and notarized receipts
 			'/p': {
-				target: 'http://127.0.0.1:8443',
+				target: serverBackendUrl,
 				changeOrigin: true,
 				bypass: (req) => {
 					// When a browser requests an HTML document for navigation,

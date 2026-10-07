@@ -69,8 +69,14 @@ def ed25519_verify(vk_b64: str, message_bytes: bytes, sig_b64: str) -> bool:
 
 DB_PATH = os.environ.get("VAULT_MANAGER_DB", "manager.db")
 RELEASES_STORAGE = Path(os.environ.get("VAULT_RELEASES_DIR", "manager_releases"))
-CLOUDFLARE_TUNNEL_URL = os.environ.get("VAULT_TUNNEL_URL", "http://localhost:8443").rstrip("/")
-LOCAL_HUB_URL = os.environ.get("VAULT_LOCAL_HUB_URL", "http://localhost:8443").rstrip("/")
+
+# Server / Kiosk Hub URL resolution for Manager dynamic routing
+_raw_server_ip = os.environ.get("SERVERIP") or os.environ.get("SERVER_IP") or "localhost"
+_server_host = _raw_server_ip.replace("http://", "").replace("https://", "").split("/")[0]
+_default_hub = f"http://{_server_host}:8443" if ":" not in _server_host else f"http://{_server_host}"
+
+CLOUDFLARE_TUNNEL_URL = os.environ.get("VAULT_TUNNEL_URL", _default_hub).rstrip("/")
+LOCAL_HUB_URL = os.environ.get("VAULT_LOCAL_HUB_URL", _default_hub).rstrip("/")
 
 def get_db():
     conn = sqlite3.connect(DB_PATH, timeout=10.0)
