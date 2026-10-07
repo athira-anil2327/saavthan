@@ -288,6 +288,16 @@ def init_server_db():
                 ("node_identity", b64u(bytes(sk)), b64u(bytes(sk.verify_key)), time.time())
             )
 
+        # Default admin account on fresh install
+        user_count = conn.execute("SELECT COUNT(*) as c FROM users").fetchone()["c"]
+        if user_count == 0:
+            user_id = str(uuid4())
+            hashed = hash_password("admin123")
+            conn.execute(
+                "INSERT INTO users (id, username, password_hash, role, created_at) VALUES (?, ?, ?, 'owner', ?)",
+                (user_id, "admin", hashed, time.time())
+            )
+
     conn.close()
 
 def get_node_identity() -> dict:
