@@ -82,20 +82,28 @@ def _get_server_pepper() -> bytes:
 
 SERVER_PEPPER = _get_server_pepper()
 
-# Server host / IP resolution for simple cross-machine deployment (SERVERIP, SERVER_IP, or localhost)
-_raw_server_ip = os.environ.get("SERVERIP") or os.environ.get("SERVER_IP") or "localhost"
+# Server host / IP resolution for simple cross-machine deployment (SERVERIP, SERVER_IP, or default vault.laddu.cc)
+_raw_server_ip = os.environ.get("SERVERIP") or os.environ.get("SERVER_IP") or "vault.laddu.cc"
 _server_host = _raw_server_ip.replace("http://", "").replace("https://", "").split("/")[0]
 
-_default_tunnel = f"http://{_server_host}:8443" if ":" not in _server_host else f"http://{_server_host}"
+if _server_host in ("localhost", "127.0.0.1") or _server_host.replace(".", "").isdigit():
+    _default_tunnel = f"http://{_server_host}:8443" if ":" not in _server_host else f"http://{_server_host}"
+    _default_vanity = _server_host if ":" in _server_host else f"{_server_host}:8443"
+else:
+    _default_tunnel = f"https://{_server_host}" if ":" not in _server_host else f"http://{_server_host}"
+    _default_vanity = _server_host
+
 CLOUDFLARE_TUNNEL_URL = os.environ.get("VAULT_TUNNEL_URL", _default_tunnel).rstrip("/")
-VANITY_DOMAIN = os.environ.get("VAULT_VANITY_DOMAIN", _server_host if ":" in _server_host else f"{_server_host}:8443").rstrip("/")
+VANITY_DOMAIN = os.environ.get("VAULT_VANITY_DOMAIN", _default_vanity).rstrip("/")
 
 # Default Central Manager URL when enrolling node or syncing notarizations
 _default_manager_host = os.environ.get("MANAGER_IP") or _raw_server_ip
-DEFAULT_MANAGER_URL = os.environ.get(
-    "VAULT_MANAGER_URL",
-    (f"http://{_default_manager_host}:8000" if "://" not in _default_manager_host else _default_manager_host).rstrip("/")
-)
+if _default_manager_host in ("localhost", "127.0.0.1") or _default_manager_host.replace(".", "").isdigit():
+    _default_mgr_url = f"http://{_default_manager_host}:8000" if "://" not in _default_manager_host else _default_manager_host
+else:
+    _default_mgr_url = f"https://{_default_manager_host}" if "://" not in _default_manager_host else _default_manager_host
+
+DEFAULT_MANAGER_URL = os.environ.get("VAULT_MANAGER_URL", _default_mgr_url).rstrip("/")
 
 # --- Cryptographic Helpers ---
 

@@ -18,10 +18,10 @@ import { sveltekit } from '@sveltejs/kit/vite';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vite';
 
-// Target endpoints: accepts SERVERIP (e.g. "1.2.3.4" or "http://1.2.3.4")
+// Target endpoints: accepts SERVERIP (e.g. "127.0.0.1", "1.2.3.4", or "http://1.2.3.4")
 // For manager, targets manager.py on port 8000 and server.py on port 8443
 function resolveBackend(raw: string | undefined, defaultPort: number): string {
-	const val = raw || `127.0.0.1:${defaultPort}`;
+	const val = raw || '127.0.0.1';
 	if (val.startsWith('http://') || val.startsWith('https://')) {
 		return val.includes(':', val.indexOf('://') + 3) ? val : `${val}:${defaultPort}`;
 	}
@@ -33,6 +33,7 @@ const managerBackendUrl = resolveBackend(process.env.MANAGER_BACKEND_URL || host
 const serverBackendUrl = resolveBackend(process.env.SERVER_BACKEND_URL || hostOrIp, 8443);
 
 export default defineConfig({
+	cacheDir: './.vite',
 	plugins: [
 		tailwindcss(),
 		sveltekit({

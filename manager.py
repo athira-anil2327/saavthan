@@ -71,9 +71,13 @@ DB_PATH = os.environ.get("VAULT_MANAGER_DB", "manager.db")
 RELEASES_STORAGE = Path(os.environ.get("VAULT_RELEASES_DIR", "manager_releases"))
 
 # Server / Kiosk Hub URL resolution for Manager dynamic routing
-_raw_server_ip = os.environ.get("SERVERIP") or os.environ.get("SERVER_IP") or "localhost"
+_raw_server_ip = os.environ.get("SERVERIP") or os.environ.get("SERVER_IP") or "vault.laddu.cc"
 _server_host = _raw_server_ip.replace("http://", "").replace("https://", "").split("/")[0]
-_default_hub = f"http://{_server_host}:8443" if ":" not in _server_host else f"http://{_server_host}"
+
+if _server_host in ("localhost", "127.0.0.1") or _server_host.replace(".", "").isdigit():
+    _default_hub = f"http://{_server_host}:8443" if ":" not in _server_host else f"http://{_server_host}"
+else:
+    _default_hub = f"https://{_server_host}" if ":" not in _server_host else f"http://{_server_host}"
 
 CLOUDFLARE_TUNNEL_URL = os.environ.get("VAULT_TUNNEL_URL", _default_hub).rstrip("/")
 LOCAL_HUB_URL = os.environ.get("VAULT_LOCAL_HUB_URL", _default_hub).rstrip("/")
