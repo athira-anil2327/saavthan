@@ -48,6 +48,7 @@ export default defineConfig({
 	server: {
 		port: 5173,
 		host: '0.0.0.0',
+		allowedHosts: ['vault.laddu.cc'],
 		proxy: {
 			// Central Manager API: Fleet management, tokens, OTA releases
 			'/api/v1/admin': {
