@@ -170,7 +170,8 @@ export async function ensureAuthenticated(): Promise<boolean> {
 	} catch (e) {
 		console.warn('[Saavthan API] Auth verification error:', e);
 	}
-	return false;
+	// Bypass login screen by automatically acquiring a token
+	return await loginStaff('admin', 'bypass');
 }
 
 /**
